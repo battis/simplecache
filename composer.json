@@ -1,6 +1,7 @@
 {
     "name": "battis/simplecache",
     "description": "Manage a simple cache backed by a MySQL database",
+    "license": "LGPL-3.0",
     "authors": [
         {
             "name": "Seth Battis",
