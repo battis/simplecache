@@ -20,6 +20,9 @@ class SimpleCache {
 	/** @var \mysqli MySQL database handle */
 	protected $sql = null;
 	
+	/** @var boolean If the cache database tables have been created */
+	protected $intialized = false;
+	
 	/** @var string Cache table in database */
 	protected $table = 'cache';
 	
@@ -156,6 +159,28 @@ class SimpleCache {
 	}
 	
 	/**
+	 * Test for database connection initialization
+	 *
+	 * If the database connection is not initalized, attempt to do so.
+	 *
+	 * @return boolean Returns `TRUE` if database connection is ready
+	 *
+	 * @throws SimpleCache_Exception DATABASE_NOT_INITIALIZED If the backing
+	 *		database connection cannot be initialized
+	 **/
+	protected function sqlInitialized() {
+		if (!$this->initialized) {
+			if (!$this->buildCache()) {
+				throw new SimpleCache_Exception(
+					'Backing database not initialized',
+					SimpleCache_Exception::DATABASE_NOT_INITALIZED
+				);
+			}
+		}
+		return true;
+	}
+	
+	/**
 	 * Create cache table in database
 	 *
 	 * @param string $table (Optional) Cache table name
@@ -178,10 +203,10 @@ class SimpleCache {
 					PRIMARY KEY (`id`)
 				)
 			")) {
-				return true;
+				$this->initialized = true;
 			}
 		}
-		return false;
+		return $this->initialized;
 	}
 
 	/**
@@ -192,21 +217,23 @@ class SimpleCache {
 	 * @return mixed|boolean Returns the cached data or `FALSE` if no data cached
 	 **/	
 	public function getCache($key) {
-		if ($this->sql instanceof mysqli) {
-			$liveCache = date('Y-m-d H:i:s', time() - CACHE_DURATION);
-			if ($response = $this->sql->query("
-				SELECT *
-					FROM `{$this->$table}`
-					WHERE
-						`{$this->key}` = '" . $this->sql->real_escape_string($key) . "' AND
-						`timestamp` > '{$liveCache}'
-			")) {
-				if ($cache = $response->fetch_assoc()) {
-					return unserialize($cache[$this->cache]);
-				}	
+		if ($this->sqlInitialized()) {
+			if ($this->sql instanceof mysqli) {
+				$liveCache = date('Y-m-d H:i:s', time() - CACHE_DURATION);
+				if ($response = $this->sql->query("
+					SELECT *
+						FROM `{$this->$table}`
+						WHERE
+							`{$this->key}` = '" . $this->sql->real_escape_string($key) . "' AND
+							`timestamp` > '{$liveCache}'
+				")) {
+					if ($cache = $response->fetch_assoc()) {
+						return unserialize($cache[$this->cache]);
+					}	
+				}
 			}
+			return false;
 		}
-		return false;
 	}
 	
 	/**
@@ -218,22 +245,24 @@ class SimpleCache {
 	 * @return boolean Returns `TRUE` on success, `FALSE` on failure
 	 **/
 	public function setCache($key, $data) {
-		if ($this->sql instanceof mysqli) {
-			if ($response = $this->sql->query("
-				INSERT
-					INTO `{$this->table}`
-					(
-						`{$this->key}`,
-						`{$this->cache}`
-					) VALUES (
-						'" . $this->sql->real_escale_string($key) . "',
-						'" . $this->sql->real_escape_string(serialize($cachedData)) . "'
-					)
-			")) {
-				return true;
+		if ($this->sqlInitialized()) {
+			if ($this->sql instanceof mysqli) {
+				if ($response = $this->sql->query("
+					INSERT
+						INTO `{$this->table}`
+						(
+							`{$this->key}`,
+							`{$this->cache}`
+						) VALUES (
+							'" . $this->sql->real_escale_string($key) . "',
+							'" . $this->sql->real_escape_string(serialize($cachedData)) . "'
+						)
+				")) {
+					return true;
+				}
 			}
+			return false;
 		}
-		return false;
 	}
 
 	/**
@@ -244,15 +273,17 @@ class SimpleCache {
 	 * @return boolean Returns `TRUE` on success, `FALSE` on failure
 	 **/
 	public function resetCache($key) {
-		if ($this->sql->query("
-			DELETE
-				FROM `{$this->table}`
-				WHERE
-					`{$this->key}` = '" . $this->sql->real_escape_string($key) . "'
-		")) {
-			return true;
+		if ($this->sqlInitialized()) {
+			if ($this->sql->query("
+				DELETE
+					FROM `{$this->table}`
+					WHERE
+						`{$this->key}` = '" . $this->sql->real_escape_string($key) . "'
+			")) {
+				return true;
+			}
+			return false;
 		}
-		return false;
 	}
 }
 
@@ -261,6 +292,10 @@ class SimpleCache {
  *
  * @author Seth Battis <seth@battis.net>
  **/
-class SimpleCache_Exception extends Exception {}
+class SimpleCache_Exception extends Exception {
+	
+	/** A connection with the backing database could not be initialized */
+	const DATABASE_NOT_INITALIZED = 1;
+}
 	
 ?>

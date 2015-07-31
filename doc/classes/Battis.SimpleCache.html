@@ -144,19 +144,19 @@
                                 <div class="accordion" style="margin-bottom: 0">
         <div class="accordion-group">
             <div class="accordion-heading">
-                                    <a class="accordion-toggle " data-toggle="collapse" data-target="#namespace-1609740722"></a>
+                                    <a class="accordion-toggle " data-toggle="collapse" data-target="#namespace-1861276093"></a>
                                 <a href="../namespaces/default.html" style="margin-left: 30px; padding-left: 0">\</a>
             </div>
-            <div id="namespace-1609740722" class="accordion-body collapse in">
+            <div id="namespace-1861276093" class="accordion-body collapse in">
                 <div class="accordion-inner">
 
                                                     <div class="accordion" style="margin-bottom: 0">
         <div class="accordion-group">
             <div class="accordion-heading">
-                                    <a class="accordion-toggle collapsed" data-toggle="collapse" data-target="#namespace-1628879866"></a>
+                                    <a class="accordion-toggle collapsed" data-toggle="collapse" data-target="#namespace-41829660"></a>
                                 <a href="../namespaces/Battis.html" style="margin-left: 30px; padding-left: 0">Battis</a>
             </div>
-            <div id="namespace-1628879866" class="accordion-body collapse ">
+            <div id="namespace-41829660" class="accordion-body collapse ">
                 <div class="accordion-inner">
 
                     
@@ -230,9 +230,11 @@ pairs. All data stored is must be serializable.</p>
                         <section class="row-fluid protected">
                             <section class="span4">
                                                                     <a href="../classes/Battis.SimpleCache.html#method_setLifetime" class="">setLifetime()</a><br />
+                                                                    <a href="../classes/Battis.SimpleCache.html#method_sqlInitialized" class="">sqlInitialized()</a><br />
                                                             </section>
                             <section class="span4">
                                                                     <a href="../classes/Battis.SimpleCache.html#property_sql" class="">$sql</a><br />
+                                                                    <a href="../classes/Battis.SimpleCache.html#property_intialized" class="">$intialized</a><br />
                                                                     <a href="../classes/Battis.SimpleCache.html#property_table" class="">$table</a><br />
                                                                     <a href="../classes/Battis.SimpleCache.html#property_key" class="">$key</a><br />
                                                                     <a href="../classes/Battis.SimpleCache.html#property_cache" class="">$cache</a><br />
@@ -337,6 +339,30 @@ pairs. All data stored is must be serializable.</p>
                                 <h4>Type</h4>
                 \mysqli
                 &mdash; MySQL database handle                            </article>
+        </div>
+        <aside class="span4 detailsbar">
+            <h1><i class="icon-arrow-down"></i></h1>
+                        <dl>
+                                                            </dl>
+            <h2>Tags</h2>
+            <table class="table table-condensed">
+                                    <tr><td colspan="2"><em>None found</em></td></tr>
+                            </table>
+        </aside>
+    </div>
+
+                                    <div class="row-fluid">
+        <div class="span8 content class">
+            <a id="property_intialized" name="property_intialized" class="anchor"></a>
+            <article class="property">
+                <h3 class="protected ">$intialized</h3>
+                <pre class="signature">$intialized : boolean</pre>
+                <p><em></em></p>
+                
+
+                                <h4>Type</h4>
+                boolean
+                &mdash; If the cache database tables have been created                            </article>
         </div>
         <aside class="span4 detailsbar">
             <h1><i class="icon-arrow-down"></i></h1>
@@ -901,6 +927,41 @@ zero are treated as zero</p></td>
         </aside>
     </div>
 
+                                    <div class="row-fluid">
+        <div class="span8 content class">
+            <a id="method_sqlInitialized" name="method_sqlInitialized" class="anchor"></a>
+            <article class="method">
+                <h3 class="protected ">sqlInitialized()</h3>
+                <a href="#source-view" role="button" class="pull-right btn" data-toggle="modal" style="font-size: 1.1em; padding: 9px 14px"><i class="icon-code"></i></a>
+                <pre class="signature" style="margin-right: 54px;">sqlInitialized() : boolean</pre>
+                <p><em>Test for database connection initialization</em></p>
+                <p>If the database connection is not initalized, attempt to do so.</p>
+
+                
+                                    <h4>Throws</h4>
+                    <dl>
+                                                    <dt>\Battis\SimpleCache_Exception</dt>
+                            <dd><p>DATABASE_NOT_INITIALIZED If the backing
+database connection cannot be initialized</p></dd>
+                                                                    </dl>
+                
+                                    <h4>Returns</h4>
+                    boolean
+                                            &mdash; <p>Returns <code>TRUE</code> if database connection is ready</p>
+                                    				
+                            </article>
+        </div>
+        <aside class="span4 detailsbar">
+            <h1><i class="icon-arrow-down"></i></h1>
+                                                            <dl>
+                                                                            </dl>
+            <h2>Tags</h2>
+            <table class="table table-condensed">
+                                    <tr><td colspan="2"><em>None found</em></td></tr>
+                            </table>
+        </aside>
+    </div>
+
                                                     </div>
     </section>
 
@@ -953,7 +1014,7 @@ zero are treated as zero</p></td>
                     Documentation is powered by <a href="http://www.phpdoc.org/">phpDocumentor </a> and authored
                     on 
 Warning: date_default_timezone_get(): It is not safe to rely on the system's timezone settings. You are *required* to use the date.timezone setting or the date_default_timezone_set() function. In case you used any of those methods and you are still getting this warning, you most likely misspelled the timezone identifier. We selected the timezone 'UTC' for now, but please set date.timezone to select your timezone. in phar:///Users/sethbattis/Dropbox/Library/Scripts/phpdocumentor.phar/vendor/twig/twig/lib/Twig/Extension/Core.php on line 89
-July 31st, 2015 at 15:45.
+July 31st, 2015 at 16:14.
                 </section>
             </section>
         </section>
