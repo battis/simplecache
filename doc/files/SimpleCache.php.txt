@@ -21,7 +21,7 @@ class SimpleCache {
 	protected $sql = null;
 	
 	/** @var boolean If the cache database tables have been created */
-	protected $intialized = false;
+	protected $initialized = false;
 	
 	/** @var string Cache table in database */
 	protected $table = 'cache';
@@ -46,7 +46,7 @@ class SimpleCache {
 	 * @return void
 	 **/
 	public function __construct($sql = null, $table = null, $key = null, $cache = null) {
-		if (isset($mysql)) {
+		if (isset($sql)) {
 			$this->setSql($sql);
 		}
 		if (!empty($table)) {
@@ -71,7 +71,7 @@ class SimpleCache {
 	 * @return boolean Returns `TRUE` on success, `FALSE` on failure
 	 **/
 	public function setSqlInfo($host, $user, $password, $database) {
-		return $this->setSql(new mysqli($host, $user, $password, $database));
+		return $this->setSql(new \mysqli($host, $user, $password, $database));
 	}
 	
 	/**
@@ -82,7 +82,7 @@ class SimpleCache {
 	 * @return boolean Returns `TRUE` on success, `FALSE` on failure
 	 **/
 	public function setSql($sql) {
-		if ($sql instanceof mysqli) {
+		if ($sql instanceof \mysqli) {
 			$this->sql = $sql;
 			return true;
 		}
@@ -97,7 +97,7 @@ class SimpleCache {
 	 * @return boolean Returns `TRUE` on success, `FALSE` on failure
 	 **/
 	public function setTableName($table) {
-		if ($this->sql instanceof mysqli) {
+		if ($this->sql instanceof \mysqli) {
 			if ($table == $this->sql->real_escape_string($table)) {
 				$this->table = $table;
 				return true;
@@ -116,7 +116,7 @@ class SimpleCache {
 	 * @return boolean Returns `TRUE` on success, `FALSE` on failure
 	 **/
 	public function setKeyName($key) {
-		if ($this->sql instanceof mysqli) {
+		if ($this->sql instanceof \mysqli) {
 			if ($table == $this->sql->real_escape_string($key)) {
 				$this->key = $key;
 				return true;
@@ -135,7 +135,7 @@ class SimpleCache {
 	 * @return boolean Returns `TRUE` on success, `FALSE` on failure
 	 **/
 	public function setCacheName($cache) {
-		if ($this->sql instanceof mysqli) {
+		if ($this->sql instanceof \mysqli) {
 			if ($cache == $this->sql->real_escape_string($cache)) {
 				$this->cache = $cache;
 				return true;
@@ -190,7 +190,7 @@ class SimpleCache {
 	 * @return boolean Returns `TRUE` on success, `FALSE` on failure
 	 **/
 	public function buildCache($table = null, $key = null, $cache = null) {
-		if ($this->sql instanceof mysqli &&
+		if ($this->sql instanceof \mysqli &&
 			($table === null || $this->setTable($table)) &&
 			($key === null || $this->setKeyName($key)) &&
 			($cache === null || $this->setCacheName($cache))) {
@@ -218,11 +218,11 @@ class SimpleCache {
 	 **/	
 	public function getCache($key) {
 		if ($this->sqlInitialized()) {
-			if ($this->sql instanceof mysqli) {
-				$liveCache = date('Y-m-d H:i:s', time() - CACHE_DURATION);
+			if ($this->sql instanceof \mysqli) {
+				$liveCache = date('Y-m-d H:i:s', time() - $this->lifetime);
 				if ($response = $this->sql->query("
 					SELECT *
-						FROM `{$this->$table}`
+						FROM `{$this->table}`
 						WHERE
 							`{$this->key}` = '" . $this->sql->real_escape_string($key) . "' AND
 							`timestamp` > '{$liveCache}'
@@ -246,7 +246,7 @@ class SimpleCache {
 	 **/
 	public function setCache($key, $data) {
 		if ($this->sqlInitialized()) {
-			if ($this->sql instanceof mysqli) {
+			if ($this->sql instanceof \mysqli) {
 				if ($response = $this->sql->query("
 					INSERT
 						INTO `{$this->table}`
@@ -254,7 +254,7 @@ class SimpleCache {
 							`{$this->key}`,
 							`{$this->cache}`
 						) VALUES (
-							'" . $this->sql->real_escale_string($key) . "',
+							'" . $this->sql->real_escape_string($key) . "',
 							'" . $this->sql->real_escape_string(serialize($cachedData)) . "'
 						)
 				")) {
@@ -292,7 +292,7 @@ class SimpleCache {
  *
  * @author Seth Battis <seth@battis.net>
  **/
-class SimpleCache_Exception extends Exception {
+class SimpleCache_Exception extends \Exception {
 	
 	/** A connection with the backing database could not be initialized */
 	const DATABASE_NOT_INITALIZED = 1;
