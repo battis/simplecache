@@ -255,7 +255,7 @@ class SimpleCache {
 							`{$this->cache}`
 						) VALUES (
 							'" . $this->sql->real_escape_string($key) . "',
-							'" . $this->sql->real_escape_string(serialize($cachedData)) . "'
+							'" . $this->sql->real_escape_string(serialize($data)) . "'
 						)
 				")) {
 					return true;
