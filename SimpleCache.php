@@ -154,7 +154,7 @@ class SimpleCache {
 	 *
 	 * @return void;
 	 **/
-	protected function setLifetime($lifetimeInSeconds = self::DEFAULT_LIFETIME) {
+	public function setLifetime($lifetimeInSeconds = self::DEFAULT_LIFETIME) {
 		$this->lifetime = max(0, intval($lifetimeInSeconds));
 	}
 	
