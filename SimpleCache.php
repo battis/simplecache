@@ -247,7 +247,24 @@ class SimpleCache {
 	public function setCache($key, $data) {
 		if ($this->sqlInitialized()) {
 			if ($this->sql instanceof \mysqli) {
-				if ($response = $this->sql->query("
+				$response = $this->sql->query("
+					SELECT *
+						FROM `{$this->table}`
+						WHERE
+							`{$this->key}` = '" . $this->sql->real_escape_string($key) . "'
+				");
+				if ($cache = $response->fetch_assoc()) {
+					if ($response = $this->sql->query("
+						UPDATE
+							`{$this->table}`
+							SET
+								`{$this->cache}` = '" . $this->sql->real_escape_string($data) . "'
+							WHERE
+								`{$this->key}` = '" . $this->sql->real_escape_string($key) . "'
+					")) {
+						return true;
+					}
+				} elseif ($response = $this->sql->query("
 					INSERT
 						INTO `{$this->table}`
 						(
