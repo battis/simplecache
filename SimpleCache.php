@@ -247,20 +247,22 @@ class SimpleCache {
 	public function setCache($key, $data) {
 		if ($this->sqlInitialized()) {
 			if ($this->sql instanceof \mysqli) {
+				$_key = $this->sql->real_escape_string($key);
+				$_data = $this->sql->real_escape_string(serialize($data));
 				$response = $this->sql->query("
 					SELECT *
 						FROM `{$this->table}`
 						WHERE
-							`{$this->key}` = '" . $this->sql->real_escape_string($key) . "'
+							`{$this->key}` = '$_key'
 				");
 				if ($cache = $response->fetch_assoc()) {
 					if ($response = $this->sql->query("
 						UPDATE
 							`{$this->table}`
 							SET
-								`{$this->cache}` = '" . $this->sql->real_escape_string($data) . "'
+								`{$this->cache}` = '$_data'
 							WHERE
-								`{$this->key}` = '" . $this->sql->real_escape_string($key) . "'
+								`{$this->key}` = '$_key'
 					")) {
 						return true;
 					}
@@ -271,8 +273,8 @@ class SimpleCache {
 							`{$this->key}`,
 							`{$this->cache}`
 						) VALUES (
-							'" . $this->sql->real_escape_string($key) . "',
-							'" . $this->sql->real_escape_string(serialize($data)) . "'
+							'$_key',
+							'$_data'
 						)
 				")) {
 					return true;
