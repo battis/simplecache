@@ -17,6 +17,9 @@ class SimpleCache {
 	/** Default cache lifetime (1 hour) */
 	const DEFAULT_LIFETIME = 3600; /* 60 seconds * 60 minutes = 1 hour */
 	
+	/** Cache length never expires */
+	const IMMORTAL_LIFETIME = 0;
+	
 	/** @var \mysqli MySQL database handle */
 	protected $sql = null;
 	
@@ -219,17 +222,32 @@ class SimpleCache {
 	public function getCache($key) {
 		if ($this->sqlInitialized()) {
 			if ($this->sql instanceof \mysqli) {
-				$liveCache = date('Y-m-d H:i:s', time() - $this->lifetime);
-				if ($response = $this->sql->query("
-					SELECT *
-						FROM `{$this->table}`
-						WHERE
-							`{$this->key}` = '" . $this->sql->real_escape_string($key) . "' AND
-							`timestamp` > '{$liveCache}'
-				")) {
-					if ($cache = $response->fetch_assoc()) {
-						return unserialize($cache[$this->cache]);
-					}	
+				$_key = $this->sql->real_escape_string($key);
+				if ($this->lifetime == self::IMMORTAL_LIFETIME) {
+					$liveCache = date('Y-m-d H:i:s', time() - $this->lifetime);
+					if ($response = $this->sql->query("
+						SELECT *
+							FROM `{$this->table}`
+							WHERE
+								`{$this->key}` = '$_key'
+					")) {
+						if ($cache = $response->fetch_assoc()) {
+							return unserialize($cache[$this->cache]);
+						}	
+					}
+				} else {
+					$liveCache = date('Y-m-d H:i:s', time() - $this->lifetime);
+					if ($response = $this->sql->query("
+						SELECT *
+							FROM `{$this->table}`
+							WHERE
+								`{$this->key}` = '$_key' AND
+								`timestamp` > '{$liveCache}'
+					")) {
+						if ($cache = $response->fetch_assoc()) {
+							return unserialize($cache[$this->cache]);
+						}	
+					}
 				}
 			}
 			return false;
@@ -293,11 +311,12 @@ class SimpleCache {
 	 **/
 	public function resetCache($key) {
 		if ($this->sqlInitialized()) {
+			$_key = $this->sql->real_escape_string($key);
 			if ($this->sql->query("
 				DELETE
 					FROM `{$this->table}`
 					WHERE
-						`{$this->key}` = '" . $this->sql->real_escape_string($key) . "'
+						`{$this->key}` = '$_key'
 			")) {
 				return true;
 			}
