@@ -20,6 +20,9 @@ class SimpleCache {
 	/** Cache length never expires */
 	const IMMORTAL_LIFETIME = 0;
 	
+	/** MySQL Timestamp format */
+	const MYSQL_TIMESTAMP = 'Y-m-d H:i:s';
+	
 	/** @var \mysqli MySQL database handle */
 	protected $sql = null;
 	
@@ -45,10 +48,12 @@ class SimpleCache {
 	 * @param string $table (Optional) Cache table name in database
 	 * @param string $key (Optional) Cache key field name in database
 	 * @param string $cache (Optional) Cache storage field name in database
+	 * @param boolean $purge (Optional) Automatically purge expired items upon
+	 *		construction (Defaults to `FALSE`)
 	 *
 	 * @return void
 	 **/
-	public function __construct($sql = null, $table = null, $key = null, $cache = null) {
+	public function __construct($sql = null, $table = null, $key = null, $cache = null, $purge = false) {
 		if (isset($sql)) {
 			$this->setSql($sql);
 		}
@@ -60,6 +65,10 @@ class SimpleCache {
 		}
 		if (!empty($cache)) {
 			$this->setCacheName($cache);
+		}
+		
+		if ($purge) {
+			$this->purgeExpired();
 		}
 	}
 	
@@ -150,12 +159,18 @@ class SimpleCache {
 	}
 	
 	/**
-	 * Set lifetime of cached data
+	 * Set default lifetime of cached data
+	 *
+	 * This lifetime will be used for all new and updated caches that do not
+	 * explicitly override it.
 	 *
 	 * @param int $lifetimeInSeconds Defaults to DEFAULT_LIFETIME, values less than
 	 *		zero are treated as zero
 	 *
 	 * @return void;
+	 *
+	 * @see setCache() setCache()
+	 * @see purgeExpired() purgeExpired()
 	 **/
 	public function setLifetime($lifetimeInSeconds = self::DEFAULT_LIFETIME) {
 		$this->lifetime = max(0, intval($lifetimeInSeconds));
@@ -201,12 +216,23 @@ class SimpleCache {
 				CREATE TABLE IF NOT EXISTS `{$this->table}` (
 					`id` int(11) unsigned NOT NULL AUTO_INCREMENT,
 					`{$this->key}` text NOT NULL,
-					`{$this->cache}` text NOT NULL,
+					`{$this->cache}` longtext NOT NULL,
+					`expire` timestamp NULL DEFAULT NULL,
 					`timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 					PRIMARY KEY (`id`)
-				)
+				);
 			")) {
 				$this->initialized = true;
+				
+				/* Upgrade older cache tables for longer cache data */
+				$this->sql->query("
+					ALTER TABLE `{$this->table}` CHANGE `{$this->cache}` `{$this->cache}` longtext NOT NULL;
+				");
+				
+				/* Upgrade older cached tables to include an expire column for each row */
+				$this->sql->query("
+					ALTER TABLE `{$this->table}` ADD `expire` timestamp NULL DEFAULT NULL AFTER `{$this->cache};
+				");
 			}
 		}
 		return $this->initialized;
@@ -224,12 +250,13 @@ class SimpleCache {
 			if ($this->sql instanceof \mysqli) {
 				$_key = $this->sql->real_escape_string($key);
 				if ($this->lifetime == self::IMMORTAL_LIFETIME) {
-					$liveCache = date('Y-m-d H:i:s', time() - $this->lifetime);
+					$liveCache = date(self::MYSQL_TIMESTAMP, time() - $this->lifetime);
 					if ($response = $this->sql->query("
 						SELECT *
 							FROM `{$this->table}`
 							WHERE
-								`{$this->key}` = '$_key'
+								`{$this->key}` = '$_key' AND
+								`expire` IS NULL
 					")) {
 						if ($cache = $response->fetch_assoc()) {
 							return unserialize($cache[$this->cache]);
@@ -241,8 +268,14 @@ class SimpleCache {
 						SELECT *
 							FROM `{$this->table}`
 							WHERE
-								`{$this->key}` = '$_key' AND
-								`timestamp` > '{$liveCache}'
+								`{$this->key}` = '$_key' AND (
+									(
+										`timestamp` > '{$liveCache}' AND
+										`expire` IS NULL
+									) OR (
+										`expire` > NOW()
+									)
+								)
 					")) {
 						if ($cache = $response->fetch_assoc()) {
 							return unserialize($cache[$this->cache]);
@@ -255,18 +288,63 @@ class SimpleCache {
 	}
 	
 	/**
+	 * Purge expired cache data
+	 *
+	 * By default, this purges only cached data that has its own expiration set
+	 * explicitly, however, if the option to `$useLocalLifetime` is set to `TRUE`,
+	 * the cache lifetime default (set by `setLifetime()`, defaulting to
+	 * DEFAULT_LIFETIME) will be compared the timestamps as well, purging cache
+	 * data without explicitly set expirations.
+	 *
+	 * @param boolean $useLocalLifetime (Optional) Defaults to `FALSE`
+	 *
+	 * @return boolean Returns `TRUE` on success, `FALSE` on failure
+	 *
+	 * @see setLifetime() setLifetime()
+	 **/
+	public function purgeExpired($useLocalLifetime = false) {
+		if ($this->sqlInitialized()) {
+			if ($this->sql instanceof \mysqli) {
+				if($this->sql->query("
+					DELETE
+						FROM `{$this->table}`
+						WHERE `expire` < NOW()
+				")) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	
+	/**
 	 * Store data in cache
 	 *
 	 * @param string $key
 	 * @param mixed $data Must be serializable
+	 * @param int $lifetimeInSeconds (Optional)
 	 *
 	 * @return boolean Returns `TRUE` on success, `FALSE` on failure
+	 *
+	 * @see setLifetime() setLifetime()
 	 **/
-	public function setCache($key, $data) {
+	public function setCache($key, $data, $lifetime = null) {
 		if ($this->sqlInitialized()) {
+			
 			if ($this->sql instanceof \mysqli) {
+				
+				/* escape query data */
 				$_key = $this->sql->real_escape_string($key);
 				$_data = $this->sql->real_escape_string(serialize($data));
+				
+				/* if no lifetime passed in, use local default lifetime */
+				$lifetime = (is_int($lifetime) ? $lifetime : $this->lifetime);
+				if ($lifetime !== self::IMMORTAL_LIFETIME) {
+					$_expire = date(self::MYSQL_TIMESTAMP, time() + $lifetime);
+				} else {
+					$_expire = false;
+				}
+
 				$response = $this->sql->query("
 					SELECT *
 						FROM `{$this->table}`
@@ -278,7 +356,8 @@ class SimpleCache {
 						UPDATE
 							`{$this->table}`
 							SET
-								`{$this->cache}` = '$_data'
+								`{$this->cache}` = '$_data',
+								`expire` = " . ($_expire === false ? 'NULL' : "'$_expire'") . "'
 							WHERE
 								`{$this->key}` = '$_key'
 					")) {
@@ -290,9 +369,11 @@ class SimpleCache {
 						(
 							`{$this->key}`,
 							`{$this->cache}`
+							" . ($_expire === false ? '' : ", `expire`") . "
 						) VALUES (
 							'$_key',
 							'$_data'
+							" . ($_expire === false ? '' : "'$_expire'") . "
 						)
 				")) {
 					return true;
