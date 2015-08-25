@@ -9,7 +9,7 @@ namespace Battis;
  *
  * @author Seth Battis <seth@battis.net>
  **/
-class HiearchicalSimpleCache extends SimpleCache {
+class HierarchicalSimpleCache extends SimpleCache {
 
 	/** @var string Base for hierarchical keys `base/key` */
 	private $base = '';
