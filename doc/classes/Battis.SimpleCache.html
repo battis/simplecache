@@ -144,24 +144,24 @@
                                 <div class="accordion" style="margin-bottom: 0">
         <div class="accordion-group">
             <div class="accordion-heading">
-                                    <a class="accordion-toggle " data-toggle="collapse" data-target="#namespace-1486744027"></a>
+                                    <a class="accordion-toggle " data-toggle="collapse" data-target="#namespace-590730334"></a>
                                 <a href="../namespaces/default.html" style="margin-left: 30px; padding-left: 0">\</a>
             </div>
-            <div id="namespace-1486744027" class="accordion-body collapse in">
+            <div id="namespace-590730334" class="accordion-body collapse in">
                 <div class="accordion-inner">
 
                                                     <div class="accordion" style="margin-bottom: 0">
         <div class="accordion-group">
             <div class="accordion-heading">
-                                    <a class="accordion-toggle collapsed" data-toggle="collapse" data-target="#namespace-921553255"></a>
+                                    <a class="accordion-toggle collapsed" data-toggle="collapse" data-target="#namespace-671443028"></a>
                                 <a href="../namespaces/Battis.html" style="margin-left: 30px; padding-left: 0">Battis</a>
             </div>
-            <div id="namespace-921553255" class="accordion-body collapse ">
+            <div id="namespace-671443028" class="accordion-body collapse ">
                 <div class="accordion-inner">
 
                     
                     <ul>
-                                                                                                    <li class="class"><a href="../classes/Battis.HiearchicalSimpleCache.html">HiearchicalSimpleCache</a></li>
+                                                                                                    <li class="class"><a href="../classes/Battis.HierarchicalSimpleCache.html">HierarchicalSimpleCache</a></li>
                                                     <li class="class"><a href="../classes/Battis.HierarchicalSimpleCache_Exception.html">HierarchicalSimpleCache_Exception</a></li>
                                                     <li class="class"><a href="../classes/Battis.SimpleCache.html">SimpleCache</a></li>
                                                     <li class="class"><a href="../classes/Battis.SimpleCache_Exception.html">SimpleCache_Exception</a></li>
@@ -217,8 +217,10 @@ pairs. All data stored is must be serializable.</p>
                                                                     <a href="../classes/Battis.SimpleCache.html#method_setTableName" class="">setTableName()</a><br />
                                                                     <a href="../classes/Battis.SimpleCache.html#method_setKeyName" class="">setKeyName()</a><br />
                                                                     <a href="../classes/Battis.SimpleCache.html#method_setCacheName" class="">setCacheName()</a><br />
+                                                                    <a href="../classes/Battis.SimpleCache.html#method_setLifetime" class="">setLifetime()</a><br />
                                                                     <a href="../classes/Battis.SimpleCache.html#method_buildCache" class="">buildCache()</a><br />
                                                                     <a href="../classes/Battis.SimpleCache.html#method_getCache" class="">getCache()</a><br />
+                                                                    <a href="../classes/Battis.SimpleCache.html#method_purgeExpired" class="">purgeExpired()</a><br />
                                                                     <a href="../classes/Battis.SimpleCache.html#method_setCache" class="">setCache()</a><br />
                                                                     <a href="../classes/Battis.SimpleCache.html#method_resetCache" class="">resetCache()</a><br />
                                                             </section>
@@ -227,11 +229,12 @@ pairs. All data stored is must be serializable.</p>
                                                             </section>
                             <section class="span4">
                                                                     <a href="../classes/Battis.SimpleCache.html#constant_DEFAULT_LIFETIME" class="">DEFAULT_LIFETIME</a><br />
+                                                                    <a href="../classes/Battis.SimpleCache.html#constant_IMMORTAL_LIFETIME" class="">IMMORTAL_LIFETIME</a><br />
+                                                                    <a href="../classes/Battis.SimpleCache.html#constant_MYSQL_TIMESTAMP" class="">MYSQL_TIMESTAMP</a><br />
                                                             </section>
                         </section>
                         <section class="row-fluid protected">
                             <section class="span4">
-                                                                    <a href="../classes/Battis.SimpleCache.html#method_setLifetime" class="">setLifetime()</a><br />
                                                                     <a href="../classes/Battis.SimpleCache.html#method_sqlInitialized" class="">sqlInitialized()</a><br />
                                                             </section>
                             <section class="span4">
@@ -306,6 +309,48 @@ pairs. All data stored is must be serializable.</p>
                 <h3 class="">DEFAULT_LIFETIME</h3>
                 <pre class="signature">DEFAULT_LIFETIME</pre>
                 <p><em>Default cache lifetime (1 hour)</em></p>
+                
+            </article>
+        </div>
+        <aside class="span4 detailsbar">
+            <h1><i class="icon-arrow-down"></i></h1>
+                        <dl>
+                                                                            </dl>
+            <h2>Tags</h2>
+            <table class="table table-condensed">
+                                    <tr><td colspan="2"><em>None found</em></td></tr>
+                            </table>
+        </aside>
+    </div>
+
+                                    <div class="row-fluid">
+        <div class="span8 content class">
+            <a id="constant_IMMORTAL_LIFETIME" name="constant_IMMORTAL_LIFETIME" class="anchor"></a>
+            <article id="constant_IMMORTAL_LIFETIME" class="constant">
+                <h3 class="">IMMORTAL_LIFETIME</h3>
+                <pre class="signature">IMMORTAL_LIFETIME</pre>
+                <p><em>Cache length never expires</em></p>
+                
+            </article>
+        </div>
+        <aside class="span4 detailsbar">
+            <h1><i class="icon-arrow-down"></i></h1>
+                        <dl>
+                                                                            </dl>
+            <h2>Tags</h2>
+            <table class="table table-condensed">
+                                    <tr><td colspan="2"><em>None found</em></td></tr>
+                            </table>
+        </aside>
+    </div>
+
+                                    <div class="row-fluid">
+        <div class="span8 content class">
+            <a id="constant_MYSQL_TIMESTAMP" name="constant_MYSQL_TIMESTAMP" class="anchor"></a>
+            <article id="constant_MYSQL_TIMESTAMP" class="constant">
+                <h3 class="">MYSQL_TIMESTAMP</h3>
+                <pre class="signature">MYSQL_TIMESTAMP</pre>
+                <p><em>MySQL Timestamp format</em></p>
                 
             </article>
         </div>
@@ -486,7 +531,7 @@ pairs. All data stored is must be serializable.</p>
             <article class="method">
                 <h3 class="public ">__construct()</h3>
                 <a href="#source-view" role="button" class="pull-right btn" data-toggle="modal" style="font-size: 1.1em; padding: 9px 14px"><i class="icon-code"></i></a>
-                <pre class="signature" style="margin-right: 54px;">__construct(\mysqli  <span class="argument">$sql = null</span>, string  <span class="argument">$table = null</span>, string  <span class="argument">$key = null</span>, string  <span class="argument">$cache = null</span>) : void</pre>
+                <pre class="signature" style="margin-right: 54px;">__construct(\mysqli  <span class="argument">$sql = null</span>, string  <span class="argument">$table = null</span>, string  <span class="argument">$key = null</span>, string  <span class="argument">$cache = null</span>, boolean  <span class="argument">$purge = false</span>) : void</pre>
                 <p><em>Create a a new SimpleCache</em></p>
                 
 
@@ -511,6 +556,12 @@ pairs. All data stored is must be serializable.</p>
                                 <td>string</td>
                                 <td>$cache </td>
                                 <td><p>(Optional) Cache storage field name in database</p></td>
+                            </tr>
+                                                    <tr>
+                                <td>boolean</td>
+                                <td>$purge </td>
+                                <td><p>(Optional) Automatically purge expired items upon
+construction (Defaults to <code>FALSE</code>)</p></td>
                             </tr>
                                             </table>
                 
@@ -731,6 +782,47 @@ pairs. All data stored is must be serializable.</p>
 
                                     <div class="row-fluid">
         <div class="span8 content class">
+            <a id="method_setLifetime" name="method_setLifetime" class="anchor"></a>
+            <article class="method">
+                <h3 class="public ">setLifetime()</h3>
+                <a href="#source-view" role="button" class="pull-right btn" data-toggle="modal" style="font-size: 1.1em; padding: 9px 14px"><i class="icon-code"></i></a>
+                <pre class="signature" style="margin-right: 54px;">setLifetime(integer  <span class="argument">$lifetimeInSeconds = self::DEFAULT_LIFETIME</span>) : \Battis\void;</pre>
+                <p><em>Set default lifetime of cached data</em></p>
+                <p>This lifetime will be used for all new and updated caches that do not
+explicitly override it.</p>
+
+                                    <h4>Parameters</h4>
+                    <table class="table table-condensed table-hover">
+                                                    <tr>
+                                <td>integer</td>
+                                <td>$lifetimeInSeconds </td>
+                                <td><p>Defaults to DEFAULT_LIFETIME, values less than
+zero are treated as zero</p></td>
+                            </tr>
+                                            </table>
+                
+                
+                                    <h4>Returns</h4>
+                    \Battis\void;
+                                    				
+                            </article>
+        </div>
+        <aside class="span4 detailsbar">
+            <h1><i class="icon-arrow-down"></i></h1>
+                                                            <dl>
+                                                                                            <dt>See also</dt>
+                                                                <dd><a href="../classes/Battis.SimpleCache.html#method_setCache"><span class="namespace-wrapper">setCache()</span></a></dd>
+                                            <dd><a href="../classes/Battis.SimpleCache.html#method_purgeExpired"><span class="namespace-wrapper">purgeExpired()</span></a></dd>
+                                                                </dl>
+            <h2>Tags</h2>
+            <table class="table table-condensed">
+                                    <tr><td colspan="2"><em>None found</em></td></tr>
+                            </table>
+        </aside>
+    </div>
+
+                                    <div class="row-fluid">
+        <div class="span8 content class">
             <a id="method_buildCache" name="method_buildCache" class="anchor"></a>
             <article class="method">
                 <h3 class="public ">buildCache()</h3>
@@ -815,11 +907,54 @@ pairs. All data stored is must be serializable.</p>
 
                                     <div class="row-fluid">
         <div class="span8 content class">
+            <a id="method_purgeExpired" name="method_purgeExpired" class="anchor"></a>
+            <article class="method">
+                <h3 class="public ">purgeExpired()</h3>
+                <a href="#source-view" role="button" class="pull-right btn" data-toggle="modal" style="font-size: 1.1em; padding: 9px 14px"><i class="icon-code"></i></a>
+                <pre class="signature" style="margin-right: 54px;">purgeExpired(boolean  <span class="argument">$useLocalLifetime = false</span>) : boolean</pre>
+                <p><em>Purge expired cache data</em></p>
+                <p>By default, this purges only cached data that has its own expiration set
+explicitly, however, if the option to <code>$useLocalLifetime</code> is set to <code>TRUE</code>,
+the cache lifetime default (set by <code>setLifetime()</code>, defaulting to
+DEFAULT_LIFETIME) will be compared the timestamps as well, purging cache
+data without explicitly set expirations.</p>
+
+                                    <h4>Parameters</h4>
+                    <table class="table table-condensed table-hover">
+                                                    <tr>
+                                <td>boolean</td>
+                                <td>$useLocalLifetime </td>
+                                <td><p>(Optional) Defaults to <code>FALSE</code></p></td>
+                            </tr>
+                                            </table>
+                
+                
+                                    <h4>Returns</h4>
+                    boolean
+                                            &mdash; <p>Returns <code>TRUE</code> on success, <code>FALSE</code> on failure</p>
+                                    				
+                            </article>
+        </div>
+        <aside class="span4 detailsbar">
+            <h1><i class="icon-arrow-down"></i></h1>
+                                                            <dl>
+                                                                                            <dt>See also</dt>
+                                                                <dd><a href="../classes/Battis.SimpleCache.html#method_setLifetime"><span class="namespace-wrapper">setLifetime()</span></a></dd>
+                                                                </dl>
+            <h2>Tags</h2>
+            <table class="table table-condensed">
+                                    <tr><td colspan="2"><em>None found</em></td></tr>
+                            </table>
+        </aside>
+    </div>
+
+                                    <div class="row-fluid">
+        <div class="span8 content class">
             <a id="method_setCache" name="method_setCache" class="anchor"></a>
             <article class="method">
                 <h3 class="public ">setCache()</h3>
                 <a href="#source-view" role="button" class="pull-right btn" data-toggle="modal" style="font-size: 1.1em; padding: 9px 14px"><i class="icon-code"></i></a>
-                <pre class="signature" style="margin-right: 54px;">setCache(string  <span class="argument">$key</span>, mixed  <span class="argument">$data</span>) : boolean</pre>
+                <pre class="signature" style="margin-right: 54px;">setCache(string  <span class="argument">$key</span>, mixed  <span class="argument">$data</span>,   <span class="argument">$lifetime = null</span>) : boolean</pre>
                 <p><em>Store data in cache</em></p>
                 
 
@@ -835,6 +970,11 @@ pairs. All data stored is must be serializable.</p>
                                 <td>$data </td>
                                 <td><p>Must be serializable</p></td>
                             </tr>
+                                                    <tr>
+                                <td></td>
+                                <td>$lifetime </td>
+                                <td></td>
+                            </tr>
                                             </table>
                 
                 
@@ -847,7 +987,9 @@ pairs. All data stored is must be serializable.</p>
         <aside class="span4 detailsbar">
             <h1><i class="icon-arrow-down"></i></h1>
                                                             <dl>
-                                                                            </dl>
+                                                                                            <dt>See also</dt>
+                                                                <dd><a href="../classes/Battis.SimpleCache.html#method_setLifetime"><span class="namespace-wrapper">setLifetime()</span></a></dd>
+                                                                </dl>
             <h2>Tags</h2>
             <table class="table table-condensed">
                                     <tr><td colspan="2"><em>None found</em></td></tr>
@@ -893,43 +1035,6 @@ pairs. All data stored is must be serializable.</p>
     </div>
 
                                                     <div class="row-fluid">
-        <div class="span8 content class">
-            <a id="method_setLifetime" name="method_setLifetime" class="anchor"></a>
-            <article class="method">
-                <h3 class="protected ">setLifetime()</h3>
-                <a href="#source-view" role="button" class="pull-right btn" data-toggle="modal" style="font-size: 1.1em; padding: 9px 14px"><i class="icon-code"></i></a>
-                <pre class="signature" style="margin-right: 54px;">setLifetime(integer  <span class="argument">$lifetimeInSeconds = self::DEFAULT_LIFETIME</span>) : \Battis\void;</pre>
-                <p><em>Set lifetime of cached data</em></p>
-                
-
-                                    <h4>Parameters</h4>
-                    <table class="table table-condensed table-hover">
-                                                    <tr>
-                                <td>integer</td>
-                                <td>$lifetimeInSeconds </td>
-                                <td><p>Defaults to DEFAULT_LIFETIME, values less than
-zero are treated as zero</p></td>
-                            </tr>
-                                            </table>
-                
-                
-                                    <h4>Returns</h4>
-                    \Battis\void;
-                                    				
-                            </article>
-        </div>
-        <aside class="span4 detailsbar">
-            <h1><i class="icon-arrow-down"></i></h1>
-                                                            <dl>
-                                                                            </dl>
-            <h2>Tags</h2>
-            <table class="table table-condensed">
-                                    <tr><td colspan="2"><em>None found</em></td></tr>
-                            </table>
-        </aside>
-    </div>
-
-                                    <div class="row-fluid">
         <div class="span8 content class">
             <a id="method_sqlInitialized" name="method_sqlInitialized" class="anchor"></a>
             <article class="method">
@@ -1016,7 +1121,7 @@ database connection cannot be initialized</p></dd>
                     Documentation is powered by <a href="http://www.phpdoc.org/">phpDocumentor </a> and authored
                     on 
 Warning: date_default_timezone_get(): It is not safe to rely on the system's timezone settings. You are *required* to use the date.timezone setting or the date_default_timezone_set() function. In case you used any of those methods and you are still getting this warning, you most likely misspelled the timezone identifier. We selected the timezone 'UTC' for now, but please set date.timezone to select your timezone. in phar:///Users/sethbattis/Dropbox/Library/Scripts/phpdocumentor.phar/vendor/twig/twig/lib/Twig/Extension/Core.php on line 89
-July 31st, 2015 at 17:53.
+October 5th, 2015 at 13:41.
                 </section>
             </section>
         </section>
