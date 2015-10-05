@@ -38,7 +38,7 @@ class HierarchicalSimpleCache extends SimpleCache {
 	 *
 	 * @return string
 	 **/
-	private function hierarchicalKey($key) {
+	public function getHierarchicalKey($key) {
 		return "{$this->base}{$this->delimiter}$key";
 	}
 	
@@ -95,7 +95,7 @@ class HierarchicalSimpleCache extends SimpleCache {
 	 * @return boolean
 	 **/
 	public function setCache($key, $data) {
-		return parent::setCache($this->hierarchicalKey($key), $data);
+		return parent::setCache($this->getHierarchicalKey($key), $data);
 	}
 	
 	/**
@@ -106,7 +106,7 @@ class HierarchicalSimpleCache extends SimpleCache {
 	 * @return boolean
 	 **/
 	public function getCache($key) {
-		return parent::getCache($this->hierarchicalKey($key));
+		return parent::getCache($this->getHierarchicalKey($key));
 	}
 	
 	/**
@@ -117,7 +117,7 @@ class HierarchicalSimpleCache extends SimpleCache {
 	 * @return boolean
 	 **/
 	public function resetCache($key) {
-		return parent::resetCache($this->hierarchicalKey($key));
+		return parent::resetCache($this->getHierarchicalKey($key));
 	}
 }
 	
