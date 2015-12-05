@@ -91,11 +91,12 @@ class HierarchicalSimpleCache extends SimpleCache {
 	 *
 	 * @param string $key
 	 * @param mixed $data
+	 * @param int $lifetimeInSeconds (Optional)
 	 *
 	 * @return boolean
 	 **/
-	public function setCache($key, $data) {
-		return parent::setCache($this->getHierarchicalKey($key), $data);
+	public function setCache($key, $data, $lifetime = null) {
+		return parent::setCache($this->getHierarchicalKey($key), $data, $lifetime);
 	}
 	
 	/**
