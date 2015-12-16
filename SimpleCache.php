@@ -414,6 +414,28 @@ class SimpleCache {
 			return false;
 		}
 	}
+	
+	/**
+	 * Get the timestamp of the cached data
+	 *
+	 * @param string $key
+	 *
+	 * @return \DateTime|boolean Returns `FALSE` on invalid key
+	 **/
+	public function getCacheTimestamp($key) {
+		if ($this->sqlInitialized()) {
+			$_key = $this->sql->real_escape_string($key);
+			if ($response = $this->sql->query("
+				SELECT *
+					FROM `{$this->table}`
+					WHERE
+						`{$this->key}` = '$_key'
+			")) {
+				return new \DateTime($response->fetch_assoc()['timestamp']);
+			}
+		}
+		return false;
+	}
 }
 
 /**
