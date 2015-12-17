@@ -431,7 +431,33 @@ class SimpleCache {
 					WHERE
 						`{$this->key}` = '$_key'
 			")) {
-				return new \DateTime($response->fetch_assoc()['timestamp']);
+				if ($response->num_rows > 0) {
+					return new \DateTime($response->fetch_assoc()['timestamp']);
+				}
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Get the expiration date of the cached data
+	 *
+	 * @param string $key
+	 *
+	 * @return \DateTime|boolean Returns `FALSE` on invalid key
+	 **/
+	public function getCacheExpiration($key) {
+		if ($this->sqlInitialized()) {
+			$_key = $this->sql->real_escape_string($key);
+			if ($response = $this->sql->query("
+				SELECT *
+					FROM `{$this->table}`
+					WHERE
+						`{$this->key}` = '$_key'
+			")) {
+				if ($response->num_rows > 0) {
+					return new \DateTime($response->fetch_assoc()['expire']);
+				}
 			}
 		}
 		return false;

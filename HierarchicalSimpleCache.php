@@ -120,6 +120,28 @@ class HierarchicalSimpleCache extends SimpleCache {
 	public function resetCache($key) {
 		return parent::resetCache($this->getHierarchicalKey($key));
 	}
+	
+	/**
+	 * {@inheritDoc}
+	 * 
+	 * @param string $key
+	 *
+	 * @return \DateTime|boolean
+	 **/
+	public function getCacheTimestamp() {
+		return parent::getCacheTimestamp($this->getHierarchicalKey($key));
+	}
+	
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @param string $key
+	 *
+	 * @return \DateTime|boolean
+	 **/
+	public function getCacheExpiration($key) {
+		return parent::getCacheExpiration($this->getHierarchicalKey($key));
+	}
 }
 	
 /**
