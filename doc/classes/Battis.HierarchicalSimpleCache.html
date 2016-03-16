@@ -144,19 +144,19 @@
                                 <div class="accordion" style="margin-bottom: 0">
         <div class="accordion-group">
             <div class="accordion-heading">
-                                    <a class="accordion-toggle " data-toggle="collapse" data-target="#namespace-151722255"></a>
+                                    <a class="accordion-toggle " data-toggle="collapse" data-target="#namespace-125022861"></a>
                                 <a href="../namespaces/default.html" style="margin-left: 30px; padding-left: 0">\</a>
             </div>
-            <div id="namespace-151722255" class="accordion-body collapse in">
+            <div id="namespace-125022861" class="accordion-body collapse in">
                 <div class="accordion-inner">
 
                                                     <div class="accordion" style="margin-bottom: 0">
         <div class="accordion-group">
             <div class="accordion-heading">
-                                    <a class="accordion-toggle collapsed" data-toggle="collapse" data-target="#namespace-2123254956"></a>
+                                    <a class="accordion-toggle collapsed" data-toggle="collapse" data-target="#namespace-1837887478"></a>
                                 <a href="../namespaces/Battis.html" style="margin-left: 30px; padding-left: 0">Battis</a>
             </div>
-            <div id="namespace-2123254956" class="accordion-body collapse ">
+            <div id="namespace-1837887478" class="accordion-body collapse ">
                 <div class="accordion-inner">
 
                     
@@ -223,6 +223,9 @@ pairs. All data stored is must be serializable.</p>
                                                                     <a href="../classes/Battis.SimpleCache.html#method_purgeExpired" class="">purgeExpired()</a><br />
                                                                     <a href="../classes/Battis.HierarchicalSimpleCache.html#method_setCache" class="">setCache()</a><br />
                                                                     <a href="../classes/Battis.HierarchicalSimpleCache.html#method_resetCache" class="">resetCache()</a><br />
+                                                                    <a href="../classes/Battis.HierarchicalSimpleCache.html#method_getCacheTimestamp" class="">getCacheTimestamp()</a><br />
+                                                                    <a href="../classes/Battis.HierarchicalSimpleCache.html#method_getCacheExpiration" class="">getCacheExpiration()</a><br />
+                                                                    <a href="../classes/Battis.HierarchicalSimpleCache.html#method_getHierarchicalKey" class="">getHierarchicalKey()</a><br />
                                                                     <a href="../classes/Battis.HierarchicalSimpleCache.html#method_getBase" class="">getBase()</a><br />
                                                                     <a href="../classes/Battis.HierarchicalSimpleCache.html#method_pushKey" class="">pushKey()</a><br />
                                                                     <a href="../classes/Battis.HierarchicalSimpleCache.html#method_popKey" class="">popKey()</a><br />
@@ -256,7 +259,7 @@ pairs. All data stored is must be serializable.</p>
                         </section>
                         <section class="row-fluid private">
                             <section class="span4">
-                                                                    <a href="../classes/Battis.HierarchicalSimpleCache.html#method_hierarchicalKey" class="">hierarchicalKey()</a><br />
+                                                                    <em>No private methods found</em>
                                                             </section>
                             <section class="span4">
                                                                     <a href="../classes/Battis.HierarchicalSimpleCache.html#property_base" class="">$base</a><br />
@@ -1050,7 +1053,7 @@ data without explicitly set expirations.</p>
             <article class="method">
                 <h3 class="public ">setCache()</h3>
                 <a href="#source-view" role="button" class="pull-right btn" data-toggle="modal" style="font-size: 1.1em; padding: 9px 14px"><i class="icon-code"></i></a>
-                <pre class="signature" style="margin-right: 54px;">setCache(string  <span class="argument">$key</span>, mixed  <span class="argument">$data</span>) : boolean</pre>
+                <pre class="signature" style="margin-right: 54px;">setCache(string  <span class="argument">$key</span>, mixed  <span class="argument">$data</span>,   <span class="argument">$lifetime = null</span>) : boolean</pre>
                 <p><em>Store data in cache</em></p>
                 
 
@@ -1065,6 +1068,11 @@ data without explicitly set expirations.</p>
                                 <td>mixed</td>
                                 <td>$data </td>
                                 <td><p>Must be serializable</p></td>
+                            </tr>
+                                                    <tr>
+                                <td></td>
+                                <td>$lifetime </td>
+                                <td></td>
                             </tr>
                                             </table>
                 
@@ -1107,6 +1115,106 @@ data without explicitly set expirations.</p>
                 
                                     <h4>Returns</h4>
                     boolean
+                                    				
+                            </article>
+        </div>
+        <aside class="span4 detailsbar">
+            <h1><i class="icon-arrow-down"></i></h1>
+                                                            <dl>
+                                                                            </dl>
+            <h2>Tags</h2>
+            <table class="table table-condensed">
+                                    <tr><td colspan="2"><em>None found</em></td></tr>
+                            </table>
+        </aside>
+    </div>
+
+                                    <div class="row-fluid">
+        <div class="span8 content class">
+            <a id="method_getCacheTimestamp" name="method_getCacheTimestamp" class="anchor"></a>
+            <article class="method">
+                <h3 class="public ">getCacheTimestamp()</h3>
+                <a href="#source-view" role="button" class="pull-right btn" data-toggle="modal" style="font-size: 1.1em; padding: 9px 14px"><i class="icon-code"></i></a>
+                <pre class="signature" style="margin-right: 54px;">getCacheTimestamp() : \DateTime|boolean</pre>
+                <p><em>Get the timestamp of the cached data</em></p>
+                
+
+                
+                
+                                    <h4>Returns</h4>
+                    \DateTime|boolean
+                                    				
+                            </article>
+        </div>
+        <aside class="span4 detailsbar">
+            <h1><i class="icon-arrow-down"></i></h1>
+                                                            <dl>
+                                                                            </dl>
+            <h2>Tags</h2>
+            <table class="table table-condensed">
+                                    <tr><td colspan="2"><em>None found</em></td></tr>
+                            </table>
+        </aside>
+    </div>
+
+                                    <div class="row-fluid">
+        <div class="span8 content class">
+            <a id="method_getCacheExpiration" name="method_getCacheExpiration" class="anchor"></a>
+            <article class="method">
+                <h3 class="public ">getCacheExpiration()</h3>
+                <a href="#source-view" role="button" class="pull-right btn" data-toggle="modal" style="font-size: 1.1em; padding: 9px 14px"><i class="icon-code"></i></a>
+                <pre class="signature" style="margin-right: 54px;">getCacheExpiration(string  <span class="argument">$key</span>) : \DateTime|boolean</pre>
+                <p><em>Get the expiration date of the cached data</em></p>
+                
+
+                                    <h4>Parameters</h4>
+                    <table class="table table-condensed table-hover">
+                                                    <tr>
+                                <td>string</td>
+                                <td>$key </td>
+                                <td></td>
+                            </tr>
+                                            </table>
+                
+                
+                                    <h4>Returns</h4>
+                    \DateTime|boolean
+                                    				
+                            </article>
+        </div>
+        <aside class="span4 detailsbar">
+            <h1><i class="icon-arrow-down"></i></h1>
+                                                            <dl>
+                                                                            </dl>
+            <h2>Tags</h2>
+            <table class="table table-condensed">
+                                    <tr><td colspan="2"><em>None found</em></td></tr>
+                            </table>
+        </aside>
+    </div>
+
+                                    <div class="row-fluid">
+        <div class="span8 content class">
+            <a id="method_getHierarchicalKey" name="method_getHierarchicalKey" class="anchor"></a>
+            <article class="method">
+                <h3 class="public ">getHierarchicalKey()</h3>
+                <a href="#source-view" role="button" class="pull-right btn" data-toggle="modal" style="font-size: 1.1em; padding: 9px 14px"><i class="icon-code"></i></a>
+                <pre class="signature" style="margin-right: 54px;">getHierarchicalKey(string  <span class="argument">$key</span>) : string</pre>
+                <p><em>Build the hierarchical key `base/key`</em></p>
+                
+
+                                    <h4>Parameters</h4>
+                    <table class="table table-condensed table-hover">
+                                                    <tr>
+                                <td>string</td>
+                                <td>$key </td>
+                                <td></td>
+                            </tr>
+                                            </table>
+                
+                
+                                    <h4>Returns</h4>
+                    string
                                     				
                             </article>
         </div>
@@ -1253,43 +1361,7 @@ database connection cannot be initialized</p></dd>
         </aside>
     </div>
 
-                                                    <div class="row-fluid">
-        <div class="span8 content class">
-            <a id="method_hierarchicalKey" name="method_hierarchicalKey" class="anchor"></a>
-            <article class="method">
-                <h3 class="private ">hierarchicalKey()</h3>
-                <a href="#source-view" role="button" class="pull-right btn" data-toggle="modal" style="font-size: 1.1em; padding: 9px 14px"><i class="icon-code"></i></a>
-                <pre class="signature" style="margin-right: 54px;">hierarchicalKey(string  <span class="argument">$key</span>) : string</pre>
-                <p><em>Build the hierarchical key `base/key`</em></p>
-                
-
-                                    <h4>Parameters</h4>
-                    <table class="table table-condensed table-hover">
-                                                    <tr>
-                                <td>string</td>
-                                <td>$key </td>
-                                <td></td>
-                            </tr>
-                                            </table>
-                
-                
-                                    <h4>Returns</h4>
-                    string
-                                    				
-                            </article>
-        </div>
-        <aside class="span4 detailsbar">
-            <h1><i class="icon-arrow-down"></i></h1>
-                                                            <dl>
-                                                                            </dl>
-            <h2>Tags</h2>
-            <table class="table table-condensed">
-                                    <tr><td colspan="2"><em>None found</em></td></tr>
-                            </table>
-        </aside>
-    </div>
-
-                                    </div>
+                                                    </div>
     </section>
 
     <div id="source-view" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="source-view-label" aria-hidden="true">
@@ -1340,8 +1412,8 @@ database connection cannot be initialized</p></dd>
                     <hr />
                     Documentation is powered by <a href="http://www.phpdoc.org/">phpDocumentor </a> and authored
                     on 
-Warning: date_default_timezone_get(): It is not safe to rely on the system's timezone settings. You are *required* to use the date.timezone setting or the date_default_timezone_set() function. In case you used any of those methods and you are still getting this warning, you most likely misspelled the timezone identifier. We selected the timezone 'UTC' for now, but please set date.timezone to select your timezone. in phar:///Users/sethbattis/Dropbox/Library/Scripts/phpdocumentor.phar/vendor/twig/twig/lib/Twig/Extension/Core.php on line 89
-October 5th, 2015 at 13:41.
+Warning: date_default_timezone_get(): It is not safe to rely on the system's timezone settings. You are *required* to use the date.timezone setting or the date_default_timezone_set() function. In case you used any of those methods and you are still getting this warning, you most likely misspelled the timezone identifier. We selected the timezone 'UTC' for now, but please set date.timezone to select your timezone. in phar:///usr/local/bin/phpdoc/vendor/twig/twig/lib/Twig/Extension/Core.php on line 89
+March 16th, 2016 at 15:36.
                 </section>
             </section>
         </section>

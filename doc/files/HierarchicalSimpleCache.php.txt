@@ -38,7 +38,7 @@ class HierarchicalSimpleCache extends SimpleCache {
 	 *
 	 * @return string
 	 **/
-	private function hierarchicalKey($key) {
+	public function getHierarchicalKey($key) {
 		return "{$this->base}{$this->delimiter}$key";
 	}
 	
@@ -91,11 +91,12 @@ class HierarchicalSimpleCache extends SimpleCache {
 	 *
 	 * @param string $key
 	 * @param mixed $data
+	 * @param int $lifetimeInSeconds (Optional)
 	 *
 	 * @return boolean
 	 **/
-	public function setCache($key, $data) {
-		return parent::setCache($this->hierarchicalKey($key), $data);
+	public function setCache($key, $data, $lifetime = null) {
+		return parent::setCache($this->getHierarchicalKey($key), $data, $lifetime);
 	}
 	
 	/**
@@ -106,7 +107,7 @@ class HierarchicalSimpleCache extends SimpleCache {
 	 * @return boolean
 	 **/
 	public function getCache($key) {
-		return parent::getCache($this->hierarchicalKey($key));
+		return parent::getCache($this->getHierarchicalKey($key));
 	}
 	
 	/**
@@ -117,7 +118,29 @@ class HierarchicalSimpleCache extends SimpleCache {
 	 * @return boolean
 	 **/
 	public function resetCache($key) {
-		return parent::resetCache($this->hierarchicalKey($key));
+		return parent::resetCache($this->getHierarchicalKey($key));
+	}
+	
+	/**
+	 * {@inheritDoc}
+	 * 
+	 * @param string $key
+	 *
+	 * @return \DateTime|boolean
+	 **/
+	public function getCacheTimestamp() {
+		return parent::getCacheTimestamp($this->getHierarchicalKey($key));
+	}
+	
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @param string $key
+	 *
+	 * @return \DateTime|boolean
+	 **/
+	public function getCacheExpiration($key) {
+		return parent::getCacheExpiration($this->getHierarchicalKey($key));
 	}
 }
 	
