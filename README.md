@@ -1,5 +1,7 @@
 # SimpleCache
 
+[![Latest Version](https://img.shields.io/packagist/v/battis/simplecache.svg)](https://packagist.org/packages/battis/simplecache)
+
 Manage a simple cache backed by a MySQL database
 
 ## Install
