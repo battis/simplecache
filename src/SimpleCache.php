@@ -182,7 +182,7 @@ class SimpleCache
 	 * @param int $lifetimeInSeconds Defaults to DEFAULT_LIFETIME, values less than
 	 *		zero are treated as zero
 	 *
-	 * @return void;
+	 * @return void
 	 *
 	 * @see setCache() setCache()
 	 * @see purgeExpired() purgeExpired()
@@ -227,7 +227,7 @@ class SimpleCache
 	public function buildCache($table = null, $key = null, $cache = null)
 	{
 		if ($this->sql &&
-			($table === null || $this->setTable($table)) &&
+			($table === null || $this->setTableName($table)) &&
 			($key === null || $this->setKeyName($key)) &&
 			($cache === null || $this->setCacheName($cache))) {
 			if ($this->sql->query("
@@ -269,7 +269,6 @@ class SimpleCache
 			if ($this->sql) {
 				$_key = $this->sql->real_escape_string($key);
 				if ($this->lifetime == self::IMMORTAL_LIFETIME) {
-					$liveCache = date(self::MYSQL_TIMESTAMP, time() - $this->lifetime);
 					if ($response = $this->sql->query("
 						SELECT *
 							FROM `{$this->table}`
@@ -323,6 +322,7 @@ class SimpleCache
 	 **/
 	public function purgeExpired($useLocalLifetime = false)
 	{
+		// FIXME actually use $useLocalLifetime!
 		if ($this->sqlInitialized()) {
 			if ($this->sql) {
 				if($this->sql->query("
@@ -348,7 +348,7 @@ class SimpleCache
 	 *
 	 * @see setLifetime() setLifetime()
 	 **/
-	public function setCache($key, $data, $lifetime = null)
+	public function setCache($key, $data, $lifetimeInSeconds = null)
 	{
 		if ($this->sqlInitialized()) {
 
@@ -359,7 +359,7 @@ class SimpleCache
 				$_data = $this->sql->real_escape_string(serialize($data));
 
 				/* if no lifetime passed in, use local default lifetime */
-				$lifetime = ($lifetime === null ? $this->lifetime : $lifetime);
+				$lifetime = ($lifetimeInSeconds === null ? $this->lifetime : $lifetimeInSeconds);
 				if ($lifetime !== self::IMMORTAL_LIFETIME) {
 					$_expire = date(self::MYSQL_TIMESTAMP, time() + $lifetime);
 				} else {
@@ -372,8 +372,8 @@ class SimpleCache
 						WHERE
 							`{$this->key}` = '$_key'
 				");
-				if ($cache = $response->fetch_assoc()) {
-					if ($response = $this->sql->query("
+				if ($response->fetch_assoc()) {
+					if ($this->sql->query("
 						UPDATE
 							`{$this->table}`
 							SET
@@ -389,7 +389,7 @@ class SimpleCache
 							SimpleCache_Exception::CACHE_WRITE
 						);
 					}
-				} elseif ($response = $this->sql->query("
+				} elseif ($this->sql->query("
 					INSERT
 						INTO `{$this->table}`
 						(

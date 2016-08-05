@@ -58,7 +58,7 @@ class HierarchicalSimpleCache extends SimpleCache
 	/**
 	 * Add a layer of depth to the key hierarchy
 	 *
-	 * @param string $key
+	 * @param string $layer
 	 *
 	 * @return string The new base key
 	 **/
