@@ -1,6 +1,7 @@
 # SimpleCache
 
 [![Latest Version](https://img.shields.io/packagist/v/battis/simplecache.svg)](https://packagist.org/packages/battis/simplecache)
+[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/battis/simplecache/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/battis/simplecache/?branch=master)
 
 Manage a simple cache backed by a MySQL database
 
