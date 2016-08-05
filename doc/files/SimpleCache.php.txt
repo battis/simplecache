@@ -1,8 +1,8 @@
 <?php
 
-/** SimpleCache and related classes */
-
 namespace Battis;
+
+use mysqli;
 
 /**
  * An object to manage a simple cache
@@ -12,48 +12,48 @@ namespace Battis;
  *
  * @author Seth Battis <seth@battis.net>
  **/
-class SimpleCache {
-	
+class SimpleCache
+{
+
 	/** Default cache lifetime (1 hour) */
 	const DEFAULT_LIFETIME = 3600; /* 60 seconds * 60 minutes = 1 hour */
-	
+
 	/** Cache length never expires */
 	const IMMORTAL_LIFETIME = 0;
-	
+
 	/** MySQL Timestamp format */
 	const MYSQL_TIMESTAMP = 'Y-m-d H:i:s';
-	
-	/** @var \mysqli MySQL database handle */
+
+	/** @var mysqli MySQL database handle */
 	protected $sql = null;
-	
+
 	/** @var boolean If the cache database tables have been created */
 	protected $initialized = false;
-	
+
 	/** @var string Cache table in database */
 	protected $table = 'cache';
-	
+
 	/** @var string Cache key field in database */
 	protected $key = 'key';
-	
+
 	/** @var string Cache storage field in database */
 	protected $cache = 'cache';
-	
+
 	/** @var int Cache lifetime */
 	protected $lifetime = SimpleCache::DEFAULT_LIFETIME;
-	
+
 	/**
 	 * Create a a new SimpleCache
 	 *
-	 * @param \mysqli $sql (Optional)
+	 * @param mysqli $sql (Optional)
 	 * @param string $table (Optional) Cache table name in database
 	 * @param string $key (Optional) Cache key field name in database
 	 * @param string $cache (Optional) Cache storage field name in database
 	 * @param boolean $purge (Optional) Automatically purge expired items upon
 	 *		construction (Defaults to `FALSE`)
-	 *
-	 * @return void
 	 **/
-	public function __construct($sql = null, $table = null, $key = null, $cache = null, $purge = false) {
+	public function __construct($sql = null, $table = null, $key = null, $cache = null, $purge = false)
+	{
 		if (isset($sql)) {
 			$this->setSql($sql);
 		}
@@ -66,12 +66,12 @@ class SimpleCache {
 		if (!empty($cache)) {
 			$this->setCacheName($cache);
 		}
-		
+
 		if ($purge) {
 			$this->purgeExpired();
 		}
 	}
-	
+
 	/**
 	 * Set up database connection
 	 *
@@ -82,25 +82,37 @@ class SimpleCache {
 	 *
 	 * @return boolean Returns `TRUE` on success, `FALSE` on failure
 	 **/
-	public function setSqlInfo($host, $user, $password, $database) {
-		return $this->setSql(new \mysqli($host, $user, $password, $database));
+	public function setSqlInfo($host, $user, $password, $database)
+	{
+		return $this->setSql(new mysqli($host, $user, $password, $database));
 	}
-	
+
 	/**
 	 * Set up database connection
 	 *
-	 * @param \mysqli $sql
+	 * @param mysqli $sql
 	 *
 	 * @return boolean Returns `TRUE` on success, `FALSE` on failure
 	 **/
-	public function setSql($sql) {
-		if ($sql instanceof \mysqli) {
+	public function setSql($sql)
+	{
+		if (is_a($sql, mysqli::class)) {
 			$this->sql = $sql;
 			return true;
 		}
 		return false;
 	}
-	
+
+	/**
+	 * Validate a potential MySQL token
+	 *
+	 * @param string $token
+	 * @return boolean
+	 */
+	protected function validateToken($token) {
+		return ($token == $this->sql->real_escape_string($token));
+	}
+
 	/**
 	 * Set cache table name
 	 *
@@ -108,9 +120,10 @@ class SimpleCache {
 	 *
 	 * @return boolean Returns `TRUE` on success, `FALSE` on failure
 	 **/
-	public function setTableName($table) {
+	public function setTableName($table)
+	{
 		if ($this->sql) {
-			if ($table == $this->sql->real_escape_string($table)) {
+			if ($this->validateToken($table)) {
 				$this->table = $table;
 				return true;
 			} else {
@@ -119,7 +132,7 @@ class SimpleCache {
 		}
 		return false;
 	}
-	
+
 	/**
 	 * Set cache key field name
 	 *
@@ -127,9 +140,10 @@ class SimpleCache {
 	 *
 	 * @return boolean Returns `TRUE` on success, `FALSE` on failure
 	 **/
-	public function setKeyName($key) {
+	public function setKeyName($key)
+	{
 		if ($this->sql) {
-			if ($table == $this->sql->real_escape_string($key)) {
+			if ($this->validateToken($key)) {
 				$this->key = $key;
 				return true;
 			} else {
@@ -138,7 +152,7 @@ class SimpleCache {
 		}
 		return false;
 	}
-	
+
 	/**
 	 * Set cache storage field name
 	 *
@@ -146,9 +160,10 @@ class SimpleCache {
 	 *
 	 * @return boolean Returns `TRUE` on success, `FALSE` on failure
 	 **/
-	public function setCacheName($cache) {
+	public function setCacheName($cache)
+	{
 		if ($this->sql) {
-			if ($cache == $this->sql->real_escape_string($cache)) {
+			if ($this->validateToken($cache)) {
 				$this->cache = $cache;
 				return true;
 			} else {
@@ -157,7 +172,7 @@ class SimpleCache {
 		}
 		return false;
 	}
-	
+
 	/**
 	 * Set default lifetime of cached data
 	 *
@@ -172,10 +187,11 @@ class SimpleCache {
 	 * @see setCache() setCache()
 	 * @see purgeExpired() purgeExpired()
 	 **/
-	public function setLifetime($lifetimeInSeconds = self::DEFAULT_LIFETIME) {
+	public function setLifetime($lifetimeInSeconds = self::DEFAULT_LIFETIME)
+	{
 		$this->lifetime = max(0, intval($lifetimeInSeconds));
 	}
-	
+
 	/**
 	 * Test for database connection initialization
 	 *
@@ -186,7 +202,8 @@ class SimpleCache {
 	 * @throws SimpleCache_Exception DATABASE_NOT_INITIALIZED If the backing
 	 *		database connection cannot be initialized
 	 **/
-	protected function sqlInitialized() {
+	protected function sqlInitialized()
+	{
 		if (!$this->initialized) {
 			if (!$this->buildCache()) {
 				throw new SimpleCache_Exception(
@@ -197,7 +214,7 @@ class SimpleCache {
 		}
 		return true;
 	}
-	
+
 	/**
 	 * Create cache table in database
 	 *
@@ -207,7 +224,8 @@ class SimpleCache {
 	 *
 	 * @return boolean Returns `TRUE` on success, `FALSE` on failure
 	 **/
-	public function buildCache($table = null, $key = null, $cache = null) {
+	public function buildCache($table = null, $key = null, $cache = null)
+	{
 		if ($this->sql &&
 			($table === null || $this->setTable($table)) &&
 			($key === null || $this->setKeyName($key)) &&
@@ -223,12 +241,12 @@ class SimpleCache {
 				);
 			")) {
 				$this->initialized = true;
-				
+
 				/* Upgrade older cache tables for longer cache data */
 				$this->sql->query("
 					ALTER TABLE `{$this->table}` CHANGE `{$this->cache}` `{$this->cache}` longtext NOT NULL;
 				");
-				
+
 				/* Upgrade older cached tables to include an expire column for each row */
 				$this->sql->query("
 					ALTER TABLE `{$this->table}` ADD `expire` timestamp NULL DEFAULT NULL AFTER `{$this->cache};
@@ -244,8 +262,9 @@ class SimpleCache {
 	 * @param string $key
 	 *
 	 * @return mixed|boolean Returns the cached data or `FALSE` if no data cached
-	 **/	
-	public function getCache($key) {
+	 **/
+	public function getCache($key)
+	{
 		if ($this->sqlInitialized()) {
 			if ($this->sql) {
 				$_key = $this->sql->real_escape_string($key);
@@ -260,7 +279,7 @@ class SimpleCache {
 					")) {
 						if ($cache = $response->fetch_assoc()) {
 							return unserialize($cache[$this->cache]);
-						}	
+						}
 					}
 				} else {
 					$liveCache = date('Y-m-d H:i:s', time() - $this->lifetime);
@@ -279,14 +298,14 @@ class SimpleCache {
 					")) {
 						if ($cache = $response->fetch_assoc()) {
 							return unserialize($cache[$this->cache]);
-						}	
+						}
 					}
 				}
 			}
 			return false;
 		}
 	}
-	
+
 	/**
 	 * Purge expired cache data
 	 *
@@ -302,7 +321,8 @@ class SimpleCache {
 	 *
 	 * @see setLifetime() setLifetime()
 	 **/
-	public function purgeExpired($useLocalLifetime = false) {
+	public function purgeExpired($useLocalLifetime = false)
+	{
 		if ($this->sqlInitialized()) {
 			if ($this->sql) {
 				if($this->sql->query("
@@ -316,7 +336,7 @@ class SimpleCache {
 		}
 		return false;
 	}
-	
+
 	/**
 	 * Store data in cache
 	 *
@@ -328,15 +348,16 @@ class SimpleCache {
 	 *
 	 * @see setLifetime() setLifetime()
 	 **/
-	public function setCache($key, $data, $lifetime = null) {
+	public function setCache($key, $data, $lifetime = null)
+	{
 		if ($this->sqlInitialized()) {
-			
+
 			if ($this->sql) {
-				
+
 				/* escape query data */
 				$_key = $this->sql->real_escape_string($key);
 				$_data = $this->sql->real_escape_string(serialize($data));
-				
+
 				/* if no lifetime passed in, use local default lifetime */
 				$lifetime = ($lifetime === null ? $this->lifetime : $lifetime);
 				if ($lifetime !== self::IMMORTAL_LIFETIME) {
@@ -400,7 +421,8 @@ class SimpleCache {
 	 *
 	 * @return boolean Returns `TRUE` on success, `FALSE` on failure
 	 **/
-	public function resetCache($key) {
+	public function resetCache($key)
+	{
 		if ($this->sqlInitialized()) {
 			$_key = $this->sql->real_escape_string($key);
 			if ($this->sql->query("
@@ -414,7 +436,7 @@ class SimpleCache {
 			return false;
 		}
 	}
-	
+
 	/**
 	 * Get the timestamp of the cached data
 	 *
@@ -422,7 +444,8 @@ class SimpleCache {
 	 *
 	 * @return \DateTime|boolean Returns `FALSE` on invalid key
 	 **/
-	public function getCacheTimestamp($key) {
+	public function getCacheTimestamp($key)
+	{
 		if ($this->sqlInitialized()) {
 			$_key = $this->sql->real_escape_string($key);
 			if ($response = $this->sql->query("
@@ -446,7 +469,8 @@ class SimpleCache {
 	 *
 	 * @return \DateTime|boolean Returns `FALSE` on invalid key
 	 **/
-	public function getCacheExpiration($key) {
+	public function getCacheExpiration($key)
+	{
 		if ($this->sqlInitialized()) {
 			$_key = $this->sql->real_escape_string($key);
 			if ($response = $this->sql->query("
@@ -464,18 +488,3 @@ class SimpleCache {
 	}
 }
 
-/**
- * All exceptions thrown by SimpleCache
- *
- * @author Seth Battis <seth@battis.net>
- **/
-class SimpleCache_Exception extends \Exception {
-	
-	/** A connection with the backing database could not be initialized */
-	const DATABASE_NOT_INITALIZED = 1;
-	
-	/** An error occurred trying to write to the cache */
-	const CACHE_WRITE = 2;
-}
-	
-?>
