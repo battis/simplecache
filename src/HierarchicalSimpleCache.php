@@ -9,14 +9,15 @@ namespace Battis;
  *
  * @author Seth Battis <seth@battis.net>
  **/
-class HierarchicalSimpleCache extends SimpleCache {
+class HierarchicalSimpleCache extends SimpleCache
+{
 
 	/** @var string Base for hierarchical keys `base/key` */
 	private $base = '';
-	
+
 	/** @var string Delimiter for layers of hierarchy */
 	protected $delimiter = '/';
-	
+
 	/** @var string Replacement for `delimiter` wthin layers of hierarchy */
 	protected $placeholder = '_';
 
@@ -24,13 +25,14 @@ class HierarchicalSimpleCache extends SimpleCache {
 	 * Construct a new LTI_Cache
 	 *
 	 * @param \mysqli $sql
-	 * @param string $keyRoot
+	 * @param string $base
 	 **/
-	public function __construct($sql, $base) {
+	public function __construct($sql, $base)
+	{
 		parent::__construct($sql);
 		$this->base = $base;
 	}
-	
+
 	/**
 	 * Build the hierarchical key `base/key`
 	 *
@@ -38,19 +40,21 @@ class HierarchicalSimpleCache extends SimpleCache {
 	 *
 	 * @return string
 	 **/
-	public function getHierarchicalKey($key) {
+	public function getHierarchicalKey($key)
+	{
 		return "{$this->base}{$this->delimiter}$key";
 	}
-	
+
 	/**
 	 * Get the current hierarchical base key
 	 *
 	 * @return string
 	 **/
-	public function getBase() {
+	public function getBase()
+	{
 		return $this->base;
 	}
-	
+
 	/**
 	 * Add a layer of depth to the key hierarchy
 	 *
@@ -58,18 +62,20 @@ class HierarchicalSimpleCache extends SimpleCache {
 	 *
 	 * @return string The new base key
 	 **/
-	public function pushKey($layer) {
+	public function pushKey($layer)
+	{
 		$this->base .= $this->delimiter . str_replace($this->delimiter, $this->placeholder, $layer);
 		return $this->getBase();
 	}
-	
+
 	/**
 	 * Remove a layer of depth from the key hierarchy
 	 *
 	 * @return string|null The layer that was removed from the hierarchy (`NULL`
 	 *		if no layers exist)
 	 **/
-	public function popKey() {
+	public function popKey()
+	{
 		if (strlen($this->base)) {
 			$layers = explode($this->delimiter, $this->base);
 			$last = count($layers) - 1;
@@ -82,10 +88,10 @@ class HierarchicalSimpleCache extends SimpleCache {
 			}
 			return $layer;
 		}
-		
+
 		return null;
 	}
-	
+
 	/**
 	 * {@inheritDoc}
 	 *
@@ -95,10 +101,11 @@ class HierarchicalSimpleCache extends SimpleCache {
 	 *
 	 * @return boolean
 	 **/
-	public function setCache($key, $data, $lifetime = null) {
-		return parent::setCache($this->getHierarchicalKey($key), $data, $lifetime);
+	public function setCache($key, $data, $lifetimeInSeconds = null)
+	{
+		return parent::setCache($this->getHierarchicalKey($key), $data, $lifetimeInSeconds);
 	}
-	
+
 	/**
 	 * {@inheritDoc}
 	 *
@@ -106,10 +113,11 @@ class HierarchicalSimpleCache extends SimpleCache {
 	 *
 	 * @return boolean
 	 **/
-	public function getCache($key) {
+	public function getCache($key)
+	{
 		return parent::getCache($this->getHierarchicalKey($key));
 	}
-	
+
 	/**
 	 * {@inheritDoc}
 	 *
@@ -117,21 +125,23 @@ class HierarchicalSimpleCache extends SimpleCache {
 	 *
 	 * @return boolean
 	 **/
-	public function resetCache($key) {
+	public function resetCache($key)
+	{
 		return parent::resetCache($this->getHierarchicalKey($key));
 	}
-	
+
 	/**
 	 * {@inheritDoc}
-	 * 
+	 *
 	 * @param string $key
 	 *
 	 * @return \DateTime|boolean
 	 **/
-	public function getCacheTimestamp() {
+	public function getCacheTimestamp($key)
+	{
 		return parent::getCacheTimestamp($this->getHierarchicalKey($key));
 	}
-	
+
 	/**
 	 * {@inheritDoc}
 	 *
@@ -139,16 +149,8 @@ class HierarchicalSimpleCache extends SimpleCache {
 	 *
 	 * @return \DateTime|boolean
 	 **/
-	public function getCacheExpiration($key) {
+	public function getCacheExpiration($key)
+	{
 		return parent::getCacheExpiration($this->getHierarchicalKey($key));
 	}
 }
-	
-/**
- * All exceptions thrown by HierarchicalSimpleCache
- *
- * @author Seth Battis <seth@battis.net>
- **/
-class HierarchicalSimpleCache_Exception extends SimpleCache_Exception {}
-
-?>
