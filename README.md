@@ -34,3 +34,6 @@ if ($data === false) {
 
   $cache->setCache('foo', $data); // cache for next use
 }
+```
+
+Full API documentation is available in [/docs](https://battis.github.io/simplecache/namespaces/Battis.html).
