@@ -11,11 +11,13 @@ tools:
 
 build:
     environment:
-        php:
-            version: "5.6"
-        mysql:
-            version: "5.5"
-    # http://allwrightythen.com/creating-mysql-databases-in-scrutinizer-ci/
+        php: "5.6"
+        mysql: "5.5"
+        postgresql: false
+        mongodb: false
+        redis: false
+        neo4j: false
+        rabbitmq: false
     dependencies:
         before:
             - sudo service start mysql || true
