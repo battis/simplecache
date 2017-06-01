@@ -4,6 +4,11 @@
       <directory>tests</directory>
     </testsuite>
   </testsuites>
+  <filter>
+      <whitelist processUncoveredFilesFromWhiteList="true">
+          <directory suffix=".php">src</directory>
+      </whitelist>
+  </filter>
   <php>
       <var name="DB_HOST" value="localhost" />
       <var name="DB_USER" value="root" />
