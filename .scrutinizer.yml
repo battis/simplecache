@@ -1,20 +1,22 @@
 filter:
-    excluded_paths: [doc/*, examples/*, tests/*]
+    excluded_paths: [docs/*, examples/*, tests/*]
 
 checks:
     php: true
-#    javascript: true
 
 tools:
     php_code_sniffer:
         config:
             standard: "PSR2"
 
-# build:
-#    tests:
-#        override:
-#            -
-#                command: 'phpunit --coverage-clover=coverage.clover'
-#                coverage:
-#                    file: 'coverage.clover'
-#                    format: 'clover'
+build:
+    environment:
+        php:
+            version: "5.6"
+        mysql:
+            version: "5.5"
+    # http://allwrightythen.com/creating-mysql-databases-in-scrutinizer-ci/
+    dependencies:
+        before:
+            - sudo service start mysql || true
+            - mysql -e "CREATE DATABASE IF NOT EXISTS testsimplecache"

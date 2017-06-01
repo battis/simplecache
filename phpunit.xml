@@ -1,0 +1,14 @@
+<phpunit bootstrap="vendor/autoload.php">
+  <testsuites>
+    <testsuite name="SimpleCache">
+      <directory>tests</directory>
+    </testsuite>
+  </testsuites>
+  <php>
+      <var name="DB_HOST" value="localhost" />
+      <var name="DB_USER" value="root" />
+      <var name="DB_PASSWORD" value="" />
+      <var name="DB_DBNAME" value="testsimplecache" />
+      <var name="DB_PORT" value="3306" />
+  </php>
+</phpunit>
