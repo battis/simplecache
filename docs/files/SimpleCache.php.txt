@@ -25,6 +25,10 @@ class SimpleCache
     /** MySQL Timestamp format */
     const MYSQL_TIMESTAMP = 'Y-m-d H:i:s';
 
+    const DEFAULT_TABLE_NAME = 'cache';
+    const DEFAULT_KEY_NAME = 'key';
+    const DEFAULT_CACHE_NAME = 'cache';
+
     /** @var mysqli MySQL database handle */
     protected $sql = null;
 
@@ -32,16 +36,16 @@ class SimpleCache
     protected $initialized = false;
 
     /** @var string Cache table in database */
-    protected $table = 'cache';
+    protected $table = self::DEFAULT_TABLE_NAME;
 
     /** @var string Cache key field in database */
-    protected $key = 'key';
+    protected $key = self::DEFAULT_KEY_NAME;
 
     /** @var string Cache storage field in database */
-    protected $cache = 'cache';
+    protected $cache = self::DEFAULT_CACHE_NAME;
 
     /** @var int Cache lifetime */
-    protected $lifetime = SimpleCache::DEFAULT_LIFETIME;
+    protected $lifetime = self::DEFAULT_LIFETIME;
 
     /**
      * Create a a new SimpleCache
@@ -108,11 +112,15 @@ class SimpleCache
      * Validate a potential MySQL token
      *
      * @param string $token
-     * @return boolean
+     * @return boolean If the SQL backing database is not yet initialized, no
+     *                    tokens will validate.
      */
     protected function validateToken($token)
     {
-        return ($token == $this->sql->real_escape_string($token));
+        if ($this->sql) {
+            return (strlen($token) > 0 && $token == $this->sql->real_escape_string($token));
+        }
+        return false;
     }
 
     /**
@@ -130,17 +138,14 @@ class SimpleCache
      *
      * @param string $table
      *
-     * @return boolean Returns `TRUE` on success, `FALSE` on failure
+     * @return boolean Returns `TRUE` on success, `FALSE` on failure (e.g.
+     *                         invalid table name)
      **/
     public function setTableName($table)
     {
-        if ($this->sql) {
-            if ($this->validateToken($table)) {
-                $this->table = $table;
-                return true;
-            } else {
-                throw new SimpleCache_Exception("`$table` is not a valid table name");
-            }
+        if ($this->validateToken($table)) {
+            $this->table = $table;
+            return true;
         }
         return false;
     }
@@ -160,17 +165,14 @@ class SimpleCache
      *
      * @param string $key
      *
-     * @return boolean Returns `TRUE` on success, `FALSE` on failure
+     * @return boolean Returns `TRUE` on success, `FALSE` on failure (e.g.
+     *                         invalid key field name)
      **/
     public function setKeyName($key)
     {
-        if ($this->sql) {
-            if ($this->validateToken($key)) {
-                $this->key = $key;
-                return true;
-            } else {
-                throw new SimpleCache_Exception("`$key` is not a valid field name");
-            }
+        if ($this->validateToken($key)) {
+            $this->key = $key;
+            return true;
         }
         return false;
     }
@@ -190,17 +192,14 @@ class SimpleCache
      *
      * @param string $cache
      *
-     * @return boolean Returns `TRUE` on success, `FALSE` on failure
+     * @return boolean Returns `TRUE` on success, `FALSE` on failure (e.g.
+     *                         invalid cache field name)
      **/
     public function setCacheName($cache)
     {
-        if ($this->sql) {
-            if ($this->validateToken($cache)) {
-                $this->cache = $cache;
-                return true;
-            } else {
-                throw new SimpleCache_Exception("`$cache` is not a valid field name");
-            }
+        if ($this->validateToken($cache)) {
+            $this->cache = $cache;
+            return true;
         }
         return false;
     }
@@ -244,13 +243,13 @@ class SimpleCache
      * @throws SimpleCache_Exception DATABASE_NOT_INITIALIZED If the backing
      *        database connection cannot be initialized
      **/
-    protected function sqlInitialized()
+    protected function requireSqlInitialized()
     {
         if (!$this->initialized) {
             if (!$this->buildCache()) {
                 throw new SimpleCache_Exception(
                     'Backing database not initialized',
-                    SimpleCache_Exception::DATABASE_NOT_INITALIZED
+                    SimpleCache_Exception::DATABASE_NOT_INITIALIZED
                 );
             }
         }
@@ -258,21 +257,16 @@ class SimpleCache
     }
 
     /**
-     * Create cache table in database
-     *
-     * @param string $table (Optional) Cache table name
-     * @param string $key (Optional) Cache key field name
-     * @param string $cache (Optional) Cache storage field name
+     * Create cache table in database (called automatically as a prerequisite
+     * for any cache access operations, but accessible publicly, for early
+     * setup, if so desired)
      *
      * @return boolean Returns `TRUE` on success, `FALSE` on failure
      **/
-    public function buildCache($table = null, $key = null, $cache = null)
+    public function buildCache()
     {
-        if ($this->sql &&
-            ($table === null || $this->setTableName($table)) &&
-            ($key === null || $this->setKeyName($key)) &&
-            ($cache === null || $this->setCacheName($cache))) {
-            if ($this->sql->query("
+        if (!$this->initialized && $this->sql) {
+            $this->initialized = $this->sql->query("
                 CREATE TABLE IF NOT EXISTS `{$this->table}` (
                     `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
                     `{$this->key}` text NOT NULL,
@@ -280,20 +274,8 @@ class SimpleCache
                     `expire` timestamp NULL DEFAULT NULL,
                     `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                     PRIMARY KEY (`id`)
-                );
-            ")) {
-                $this->initialized = true;
-
-                /* Upgrade older cache tables for longer cache data */
-                $this->sql->query("
-                    ALTER TABLE `{$this->table}` CHANGE `{$this->cache}` `{$this->cache}` longtext NOT NULL;
-                ");
-
-                /* Upgrade older cached tables to include an expire column for each row */
-                $this->sql->query("
-                    ALTER TABLE `{$this->table}` ADD `expire` timestamp NULL DEFAULT NULL AFTER `{$this->cache};
-                ");
-            }
+                );"
+            );
         }
         return $this->initialized;
     }
@@ -307,44 +289,41 @@ class SimpleCache
      **/
     public function getCache($key)
     {
-        if ($this->sqlInitialized()) {
-            if ($this->sql) {
-                $_key = $this->sql->real_escape_string($key);
-                if ($this->lifetime == self::IMMORTAL_LIFETIME) {
-                    if ($response = $this->sql->query("
-                        SELECT *
-                            FROM `{$this->table}`
-                            WHERE
-                                `{$this->key}` = '$_key' AND
-                                `expire` IS NULL
-                    ")) {
-                        if ($cache = $response->fetch_assoc()) {
-                            return unserialize($cache[$this->cache]);
-                        }
-                    }
-                } else {
-                    $liveCache = date('Y-m-d H:i:s', time() - $this->lifetime);
-                    if ($response = $this->sql->query("
-                        SELECT *
-                            FROM `{$this->table}`
-                            WHERE
-                                `{$this->key}` = '$_key' AND (
-                                    (
-                                        `timestamp` > '{$liveCache}' AND
-                                        `expire` IS NULL
-                                    ) OR (
-                                        `expire` > NOW()
-                                    )
-                                )
-                    ")) {
-                        if ($cache = $response->fetch_assoc()) {
-                            return unserialize($cache[$this->cache]);
-                        }
-                    }
+        $this->requireSqlInitialized();
+        $_key = $this->sql->real_escape_string($key);
+        if ($this->lifetime == self::IMMORTAL_LIFETIME) {
+            if ($response = $this->sql->query("
+                SELECT *
+                    FROM `{$this->table}`
+                    WHERE
+                        `{$this->key}` = '$_key' AND
+                        `expire` IS NULL
+            ")) {
+                if ($cache = $response->fetch_assoc()) {
+                    return unserialize($cache[$this->cache]);
                 }
             }
-            return false;
+        } else {
+            $liveCache = date('Y-m-d H:i:s', time() - $this->lifetime);
+            if ($response = $this->sql->query("
+                SELECT *
+                    FROM `{$this->table}`
+                    WHERE
+                        `{$this->key}` = '$_key' AND (
+                            (
+                                `timestamp` > '{$liveCache}' AND
+                                `expire` IS NULL
+                            ) OR (
+                                `expire` > NOW()
+                            )
+                        )
+            ")) {
+                if ($cache = $response->fetch_assoc()) {
+                    return unserialize($cache[$this->cache]);
+                }
+            }
         }
+        return false;
     }
 
     /**
@@ -376,19 +355,12 @@ class SimpleCache
      **/
     public function purgeExpired()
     {
-
-        if ($this->sqlInitialized()) {
-            if ($this->sql) {
-                if ($this->sql->query("
-                    DELETE
-                        FROM `{$this->table}`
-                        WHERE `expire` < NOW()
-                ")) {
-                    return true;
-                }
-            }
-        }
-        return false;
+        $this->requireSqlInitialized();
+        return ($this->sql->query("
+            DELETE
+                FROM `{$this->table}`
+                WHERE `expire` < NOW()
+        ") !== false);
     }
 
     /**
@@ -398,64 +370,64 @@ class SimpleCache
      * @param mixed $data Must be serializable
      * @param int|false $lifetimeInSeconds (Optional)
      *
-     * @return boolean Returns `TRUE` on success, `FALSE` on failure
+     * @return true Returns `TRUE` on success, `FALSE` on failure
+     *
+     * @throws SimpleCache_Exception CACHE_WRITE if the cache cannot be written
+     *         (or updated)
      *
      * @see setLifetime() setLifetime()
      **/
     public function setCache($key, $data, $lifetimeInSeconds = false)
     {
-        if ($this->sqlInitialized()) {
-            if ($this->sql) {
-                /* escape query data */
-                $_key = $this->sql->real_escape_string($key);
-                $_data = $this->sql->real_escape_string(serialize($data));
-                $_expire = $this->getExpirationTimestamp($lifetimeInSeconds);
+        $this->requireSqlInitialized();
 
-                $response = $this->sql->query("
-                    SELECT *
-                        FROM `{$this->table}`
-                        WHERE
-                            `{$this->key}` = '$_key'
-                ");
-                if ($response->fetch_assoc()) {
-                    if ($this->sql->query("
-                        UPDATE
-                            `{$this->table}`
-                            SET
-                                `{$this->cache}` = '$_data',
-                                `expire` = " . ($_expire === false ? 'NULL' : "'$_expire'") . "
-                            WHERE
-                                `{$this->key}` = '$_key'
-                    ")) {
-                        return true;
-                    } else {
-                        throw new SimpleCache_Exception(
-                            'Could not update existing cache data. ' . $this->sql->error,
-                            SimpleCache_Exception::CACHE_WRITE
-                        );
-                    }
-                } elseif ($this->sql->query("
-                    INSERT
-                        INTO `{$this->table}`
-                        (
-                            `{$this->key}`,
-                            `{$this->cache}`
-                            " . ($_expire === false ? '' : ", `expire`") . "
-                        ) VALUES (
-                            '$_key',
-                            '$_data'
-                            " . ($_expire === false ? '' : ", '$_expire'") . "
-                        )
-                ")) {
-                    return true;
-                } else {
-                    throw new SimpleCache_Exception(
-                        'Could not insert new cache data. ' . $this->sql->error,
-                        SimpleCache_Exception::CACHE_WRITE
-                    );
-                }
+        /* escape query data */
+        $_key = $this->sql->real_escape_string($key);
+        $_data = $this->sql->real_escape_string(serialize($data));
+        $_expire = $this->getExpirationTimestamp($lifetimeInSeconds);
+
+        $response = $this->sql->query("
+            SELECT *
+                FROM `{$this->table}`
+                WHERE
+                    `{$this->key}` = '$_key'
+        ");
+        if ($response->fetch_assoc()) {
+            if ($this->sql->query("
+                UPDATE
+                    `{$this->table}`
+                    SET
+                        `{$this->cache}` = '$_data',
+                        `expire` = " . ($_expire === false ? 'NULL' : "'$_expire'") . "
+                    WHERE
+                        `{$this->key}` = '$_key'
+            ")) {
+                return true;
+            } else {
+                throw new SimpleCache_Exception(
+                    'Could not update existing cache data. ' . $this->sql->error,
+                    SimpleCache_Exception::CACHE_WRITE
+                );
             }
-            return false;
+        } elseif ($this->sql->query("
+            INSERT
+                INTO `{$this->table}`
+                (
+                    `{$this->key}`,
+                    `{$this->cache}`
+                    " . ($_expire === false ? '' : ", `expire`") . "
+                ) VALUES (
+                    '$_key',
+                    '$_data'
+                    " . ($_expire === false ? '' : ", '$_expire'") . "
+                )
+        ")) {
+            return true;
+        } else {
+            throw new SimpleCache_Exception(
+                'Could not insert new cache data. ' . $this->sql->error,
+                SimpleCache_Exception::CACHE_WRITE
+            );
         }
     }
 
@@ -468,18 +440,14 @@ class SimpleCache
      **/
     public function resetCache($key)
     {
-        if ($this->sqlInitialized()) {
-            $_key = $this->sql->real_escape_string($key);
-            if ($this->sql->query("
-                DELETE
-                    FROM `{$this->table}`
-                    WHERE
-                        `{$this->key}` = '$_key'
-            ")) {
-                return true;
-            }
-            return false;
-        }
+        $this->requireSqlInitialized();
+        $_key = $this->sql->real_escape_string($key);
+        return ($this->sql->query("
+            DELETE
+                FROM `{$this->table}`
+                WHERE
+                    `{$this->key}` = '$_key'
+        ") !== false);
     }
 
     /**
@@ -491,20 +459,18 @@ class SimpleCache
      **/
     public function getCacheTimestamp($key)
     {
-        if ($this->sqlInitialized()) {
-            $_key = $this->sql->real_escape_string($key);
-            if ($response = $this->sql->query("
-                SELECT *
-                    FROM `{$this->table}`
-                    WHERE
-                        `{$this->key}` = '$_key'
-            ")) {
-                if ($response->num_rows > 0) {
-                    return new \DateTime($response->fetch_assoc()['timestamp']);
-                }
+        $this->requireSqlInitialized();
+        $_key = $this->sql->real_escape_string($key);
+        if ($response = $this->sql->query("
+            SELECT *
+                FROM `{$this->table}`
+                WHERE
+                    `{$this->key}` = '$_key'
+        ")) {
+            if ($response->num_rows > 0) {
+                return new \DateTime($response->fetch_assoc()['timestamp']);
             }
         }
-        return false;
     }
 
     /**
@@ -516,20 +482,18 @@ class SimpleCache
      **/
     public function getCacheExpiration($key)
     {
-        if ($this->sqlInitialized()) {
-            $_key = $this->sql->real_escape_string($key);
-            if ($response = $this->sql->query("
-                SELECT *
-                    FROM `{$this->table}`
-                    WHERE
-                        `{$this->key}` = '$_key'
-            ")) {
-                if ($response->num_rows > 0) {
-                    return new \DateTime($response->fetch_assoc()['expire']);
-                }
+        $this->requireSqlInitialized();
+        $_key = $this->sql->real_escape_string($key);
+        if ($response = $this->sql->query("
+            SELECT *
+                FROM `{$this->table}`
+                WHERE
+                    `{$this->key}` = '$_key'
+        ")) {
+            if ($response->num_rows > 0) {
+                return new \DateTime($response->fetch_assoc()['expire']);
             }
         }
-        return false;
     }
 }
 

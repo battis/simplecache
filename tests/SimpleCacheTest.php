@@ -4,22 +4,17 @@ namespace Tests;
 
 use mysqli;
 use DateTime;
+use Exception;
 use Battis\SimpleCache;
+use Battis\SimpleCache_Exception;
 use PHPUnit\Framework\TestCase;
+use Tests\Wrappers\CacheWrapper as CW;
 
-class SimpleCacheTests extends TestCase
+class SimpleCacheTest extends TestCase
 {
     protected static $mysqli = null;
 
-    protected static $defaultNames = ['cache', 'key', 'cache'];
-    protected static $customNames = [
-        ['foo', 'bar', 'baz'],
-        ['alice', 'bob', 'carol']
-    ];
-
-    const TABLE = 0;
-    const KEY = 1;
-    const CACHE = 2;
+    const SHORT_EXPIRE = 1;
 
     public static function setUpBeforeClass()
     {
@@ -30,10 +25,6 @@ class SimpleCacheTests extends TestCase
             $GLOBALS['DB_DBNAME'],
             $GLOBALS['DB_PORT']
         );
-        self::$mysqli->query('DROP TABLE IF EXISTS `' . static::$defaultNames[static::TABLE] . '`');
-        foreach (static::$customNames as $custom) {
-            self::$mysqli->query('DROP TABLE IF EXISTS `' . $custom[static::TABLE] . '`');
-        }
     }
 
     protected function checkMySQLResponse($response)
@@ -41,7 +32,7 @@ class SimpleCacheTests extends TestCase
         $this->assertTrue($response !== false, 'Error ' . self::$mysqli->errno . ': ' . self::$mysqli->error);
     }
 
-    protected function validateDatabaseConfiguration($table, $key, $cache)
+    protected function checkDbTableDefinition($table, $key, $cache)
     {
         $response = self::$mysqli->query("SHOW CREATE TABLE `$table`");
         $this->checkMySQLResponse($response);
@@ -65,225 +56,234 @@ class SimpleCacheTests extends TestCase
         );
     }
 
-    protected function queryDatabase($key, $cache, $tableName = 'cache', $keyName = 'key', $cacheName = 'cache')
-    {
+    protected function checkDbCache(
+        CW $wrapper,
+        $key,
+        $data,
+        $tableName = false,
+        $keyName = false,
+        $cacheName = false
+    ) {
+        $tableName = ($tableName === false ? $wrapper->names[CW::TABLE] : $tableName);
+        $keyName = ($keyName === false ? $wrapper->names[CW::KEY] : $keyName);
+        $cacheName = ($cacheName === false ? $wrapper->names[CW::CACHE] : $cacheName);
+
         $response = self::$mysqli->query(
             "SELECT * FROM `$tableName` " .
             "WHERE `$keyName` = '$key' AND " .
-            "`$cacheName` = '" . serialize($cache) . "' AND " .
+            "`$cacheName` = '" . serialize($data) . "' AND " .
             "`expire` IS NOT NULL"
         );
         $this->checkMySQLResponse($response);
         return $response;
     }
 
-    public function testPreInstantiation()
+    public function testPreInstantiation(CW $wrapper = null)
     {
-        foreach (['cache', 'foo'] as $table) {
-            $response = self::$mysqli->query("SHOW TABLES LIKE '$table'");
-            $this->checkMySQLResponse($response);
-            $this->assertEquals(0, $response->num_rows, "`$table` table already present, but should have been dropped");
+        if (!isset($wrapper)) {
+            $wrapper = new CW();
         }
+
+        self::$mysqli->query('DROP TABLE IF EXISTS `' . $wrapper->names[CW::TABLE] . '`');
+
+        return $wrapper;
     }
 
     /**
      * @depends testPreInstantiation
      */
-    public function testInstantiation()
+    public function testInstantiation(CW $wrapper)
     {
-        $cache = new SimpleCache(self::$mysqli);
-        $this->assertInstanceOf(SimpleCache::class, $cache);
+        $wrapper->cache = new SimpleCache(self::$mysqli);
+        $this->assertInstanceOf(SimpleCache::class, $wrapper->cache);
 
-        return $cache;
+        return $wrapper;
     }
 
     /**
      * @depends testInstantiation
      */
-    public function testDatabaseConfiguration(SimpleCache $cache)
+    public function testDatabaseConfiguration(CW $wrapper)
     {
-        $this->assertTrue($cache->buildCache());
-        $this->validateDatabaseConfiguration(...static::$defaultNames);
+        $this->assertTrue($wrapper->cache->buildCache());
+        $this->checkDbTableDefinition(...$wrapper->names);
 
-        return $cache;
+        return $wrapper;
     }
 
     /**
-     * @depends testInstantiation
+     * @depends testDatabaseConfiguration
      */
-    public function testSetCache(SimpleCache $cache)
+    public function testBadSqlInstance(CW $wrapper)
     {
-        $this->assertTrue($cache->setCache('set-get', 'foo'));
+        $this->assertFalse($wrapper->cache->setSql(false));
+    }
 
-        $response = $this->queryDatabase('set-get', 'foo');
-        $this->assertEquals(1, $response->num_rows, '`set-get` not found');
+    /**
+     * @depends testDatabaseConfiguration
+     */
+    public function testNames(CW $wrapper)
+    {
+        $this->assertEquals($wrapper->names[CW::TABLE], $wrapper->cache->getTableName());
+        $this->assertEquals($wrapper->names[CW::KEY], $wrapper->cache->getKeyName());
+        $this->assertEquals($wrapper->names[CW::CACHE], $wrapper->cache->getCacheName());
+        $this->assertEquals(SimpleCache::DEFAULT_LIFETIME, $wrapper->cache->getLifetime());
+    }
 
-        return $cache;
+    /**
+     * @depends testDatabaseConfiguration
+     */
+    public function testBadNames(CW $wrapper)
+    {
+        foreach (['setTableName', 'setKeyName', 'setCacheName'] as $method) {
+            try {
+                $wrapper->cache->$method("foo'");
+            } catch (Exception $e) {
+                $this->assertInstanceOf(SimpleCache_Exception::class, $e);
+            }
+        }
+    }
+
+    /**
+     * @depends testDatabaseConfiguration
+     */
+    public function testSetCache(CW $wrapper)
+    {
+        $this->assertTrue($wrapper->cache->setCache(CW::SET_GET, $wrapper->values[CW::SET_GET]));
+
+        $response = $this->checkDbCache($wrapper, CW::SET_GET, $wrapper->values[CW::SET_GET]);
+        $this->assertEquals(1, $response->num_rows, '`' . CW::SET_GET . '` not found');
+
+        return $wrapper;
     }
 
     /**
      * @depends testSetCache
      */
-    public function testGetCache(SimpleCache $cache)
+    public function testGetCache(CW $wrapper)
     {
-        $data = $cache->getCache('set-get');
-        $this->assertEquals('foo', $data, 'Wrong value for `set-get`');
+        $data = $wrapper->cache->getCache(CW::SET_GET);
+        $this->assertEquals($wrapper->values[CW::SET_GET], $data, 'Wrong value for `' . CW::SET_GET . '`');
 
-        return $cache;
+        return $wrapper;
     }
 
     /**
      * @depends testSetCache
      */
-    public function testGetCacheTimestamp(SimpleCache $cache)
+    public function testGetCacheTimestamp(CW $wrapper)
     {
-        $timestamp = $cache->getCacheTimestamp('set-get');
-        $this->assertInstanceOf(DateTime::class, $timestamp);
-        $this->assertLessThanOrEqual(0, (integer) ($timestamp->diff(new DateTime())->format('%s')));
-    }
-
-    /**
-     * @depends testSetCache
-     */
-    public function testGetCacheExpiration(SimpleCache $cache)
-    {
-        $timestamp = $cache->getCacheExpiration('set-get');
+        $timestamp = $wrapper->cache->getCacheTimestamp(CW::SET_GET);
         $this->assertInstanceOf(DateTime::class, $timestamp);
         $this->assertGreaterThanOrEqual(0, (integer) ($timestamp->diff(new DateTime())->format('%s')));
     }
 
     /**
-     * @depends testGetCache
+     * @depends testSetCache
      */
-    public function testResetCache(SimpleCache $cache)
+    public function testGetCacheExpiration(CW $wrapper)
     {
-        $this->assertTrue($cache->resetCache('set-get'));
-        $response = $this->queryDatabase('set-get', 'foo');
-        $this->assertEquals(0, $response->num_rows, 'reset `set-get` still present');
+        $timestamp = $wrapper->cache->getCacheExpiration(CW::SET_GET);
+        $this->assertInstanceOf(DateTime::class, $timestamp);
+        $this->assertLessThanOrEqual(0, (integer) ($timestamp->diff(new DateTime())->format('%s')));
     }
 
     /**
-     * @depends testInstantiation
+     * @depends testGetCache
      */
-    public function testSetCacheWithExpirationPreExpire(SimpleCache $cache)
+    public function testResetCache(CW $wrapper)
     {
-        $this->assertTrue($cache->setCache('test-expire', 'foo', 1));
-        $data = $cache->getCache('test-expire');
-        $this->assertEquals('foo', $data, 'Wrong value for `test-expire`');
+        $this->assertTrue($wrapper->cache->resetCache(CW::SET_GET));
+        $response = $this->checkDbCache($wrapper, CW::SET_GET, $wrapper->values[CW::SET_GET]);
+        $this->assertEquals(0, $response->num_rows, 'reset `' . CW::SET_GET . '` still present');
+    }
 
-        return $cache;
+    /**
+     * @depends testDatabaseConfiguration
+     */
+    public function testSetCacheWithExpirationPreExpire(CW $wrapper)
+    {
+        $this->assertTrue($wrapper->cache->setCache(
+            CW::EXPIRE,
+            $wrapper->values[CW::EXPIRE], self::SHORT_EXPIRE
+        ));
+        $data = $wrapper->cache->getCache(CW::EXPIRE);
+        $this->assertEquals($wrapper->values[CW::EXPIRE], $data, 'Wrong value for `' . CW::EXPIRE . '`');
+
+        return $wrapper;
     }
 
     /**
      * @depends testSetCacheWithExpirationPreExpire
      */
-    public function testSetCacheWithLifetimePreExpire(SimpleCache $cache)
+    public function testSetCacheWithLifetimePreExpire(CW $wrapper)
     {
-        $cache->setLifetime(1);
-        $this->assertTrue($cache->setCache('test-lifetime', 'foo'));
-        $data = $cache->getCache('test-lifetime');
-        $this->assertEquals('foo', $data, 'wrong value for `test-lifetime`');
+        $wrapper->cache->setLifetime(self::SHORT_EXPIRE);
+        $this->assertTrue($wrapper->cache->setCache(CW::LIFETIME, $wrapper->values[CW::LIFETIME]));
+        $data = $wrapper->cache->getCache(CW::LIFETIME);
+        $this->assertEquals(
+            $wrapper->values[CW::LIFETIME],
+            $data,
+            'wrong value for `' . CW::LIFETIME . '`'
+        );
 
-        return $cache;
+        return $wrapper;
     }
 
     /**
      * @depends testSetCacheWithLifetimePreExpire
      */
-    public function testExpire(SimpleCache $cache)
+    public function testExpire(CW $wrapper)
     {
-        sleep(2);
+        sleep(self::SHORT_EXPIRE + 1);
 
-        return $cache;
+        return $wrapper;
     }
 
     /**
      * @depends testExpire
      */
-    public function testGetCacheWithExpirationPostExpire(SimpleCache $cache)
+    public function testGetCacheWithExpirationPostExpire(CW $wrapper)
     {
-        $data = $cache->getCache('test-expire');
-        $this->assertFalse($data, '`test-expire` not expired');
+        $data = $wrapper->cache->getCache(CW::EXPIRE);
+        $this->assertFalse($data, '`' . CW::EXPIRE . '` not expired');
 
-        return $cache;
+        return $wrapper;
     }
 
     /**
      * @depends testGetCacheWithExpirationPostExpire
      */
-    public function testGetCacheWithLifetimePostExpire(SimpleCache $cache)
+    public function testGetCacheWithLifetimePostExpire(CW $wrapper)
     {
-        $data = $cache->getCache('test-lifetime');
-        $this->assertFalse($data, '`test-lifetime` not expired');
+        $data = $wrapper->cache->getCache(CW::LIFETIME);
+        $this->assertFalse($data, '`' . CW::LIFETIME . '` not expired');
 
-        return $cache;
+        return $wrapper;
     }
 
     /**
      * @depends testGetCacheWithLifetimePostExpire
      */
-    public function testPurgeExpired(SimpleCache $cache)
+    public function testPurgeExpired(CW $wrapper)
     {
-        $keys = ['test-expire', 'test-lifetime'];
+        $keys = [CW::EXPIRE, CW::LIFETIME];
         foreach ($keys as $key) {
-            $response = $this->queryDatabase($key, 'foo');
+            $response = $this->checkDbCache($wrapper, $key, $wrapper->values[$key]);
             $this->assertEquals(1, $response->num_rows, "expired `$key` missing");
         }
 
-        $cache->purgeExpired();
+        $wrapper->cache->purgeExpired();
 
         foreach ($keys as $key) {
-            $response = $this->queryDatabase($key, 'foo');
+            $response = $this->checkDbCache($wrapper, $key, $wrapper->values[$key]);
             $this->assertEquals(0, $response->num_rows, "purged `$key` still present");
         }
     }
 
-    public function testCustomInstantiation()
-    {
-        $names = static::$customNames[0];
-        $cache = new SimpleCache(self::$mysqli, ...$names);
-        $this->assertInstanceOf(SimpleCache::class, $cache);
-
-        $this->assertTrue($cache->buildCache());
-        $this->validateDatabaseConfiguration(...$names);
-
-        return $cache;
-    }
-
-    /**
-     * @depends testCustomInstantiation
-     */
-    public function testCustomSetCache(SimpleCache $cache)
-    {
-        $this->assertTrue($cache->setCache('custom-set-get', 'bar'));
-        $response = $this->queryDatabase('custom-set-get', 'bar', ...static::$customNames[0]);
-        $this->assertEquals(1, $response->num_rows, '`custom-set-get` not found');
-
-        return $cache;
-    }
-
-    /**
-     * @depends testCustomSetCache
-     */
-    public function testCustomGetCache(SimpleCache $cache)
-    {
-        $data = $cache->getCache('custom-set-get');
-        $this->assertEquals('bar', $data, 'Wrong value for `custom-set-get`');
-    }
-
-    public function testDelayedCustomInstantiation()
-    {
-        $names = static::$customNames[1];
-        $cache = new SimpleCache(self::$mysqli);
-        $this->assertTrue($cache->setTableName($names[self::TABLE]));
-        $this->assertTrue($cache->setKeyName($names[self::KEY]));
-        $this->assertTrue($cache->setCacheName($names[self::CACHE]));
-        $this->assertTrue($cache->buildCache());
-        $this->validateDatabaseConfiguration(...$names);
-    }
-
     public static function tearDownAfterClass()
     {
+        /* intentionally leaving detritus of testing in database for analysis */
         self::$mysqli->close();
         self::$mysqli = null;
     }
